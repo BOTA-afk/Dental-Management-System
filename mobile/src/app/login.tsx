@@ -135,12 +135,12 @@ const styles = StyleSheet.create({
   forgotPasswordContainer: { alignSelf: 'flex-end', marginBottom: 25 },
   forgotPasswordText: { color: '#374151', fontSize: 14, fontWeight: '600' },
   button: { 
-    backgroundColor: '#0EA5E9', borderRadius: 15, height: 60, 
+    backgroundColor: '#2563eb', borderRadius: 15, height: 60, 
     justifyContent: 'center', alignItems: 'center', marginBottom: 20 
   },
   buttonText: { color: '#FFFFFF', fontSize: 18, fontWeight: '700' },
   errorText: { color: '#EF4444', textAlign: 'center', marginBottom: 15 },
   footer: { flexDirection: 'row', justifyContent: 'center' },
   footerText: { color: '#6B7280', fontSize: 14 },
-  signUpLink: { color: '#0EA5E9', fontSize: 14, fontWeight: '700' }
+  signUpLink: { color: '#2563eb', fontSize: 14, fontWeight: '700' }
 });

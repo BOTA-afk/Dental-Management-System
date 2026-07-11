@@ -146,7 +146,7 @@ export default function HomeScreen() {
   const getStatusColor = (status: Appointment['status']) => {
     switch (status) {
       case 'Confirmed':
-        return { bg: '#E6F4F1', text: '#0D9488' };
+        return { bg: '#EFF6FF', text: '#2563eb' };
       case 'Completed':
         return { bg: '#DCFCE7', text: '#16A34A' };
       case 'Cancelled':
@@ -168,7 +168,7 @@ export default function HomeScreen() {
 
   const getNotificationIconColor = (type: string) => {
     switch (type) {
-      case 'booking': return '#0D9488';
+      case 'booking': return '#2563eb';
       case 'reschedule': return '#3B82F6';
       case 'cancel': return '#EF4444';
       case 'billing': return '#F59E0B';
@@ -208,8 +208,8 @@ export default function HomeScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={['#0D9488']}
-            tintColor="#0D9488"
+            colors={['#2563eb']}
+            tintColor="#2563eb"
           />
         }
       >
@@ -267,7 +267,7 @@ export default function HomeScreen() {
         <Text style={styles.sectionTitle}>Upcoming Appointments</Text>
         
         {loading && !refreshing ? (
-          <ActivityIndicator size="small" color="#0D9488" style={styles.loader} />
+          <ActivityIndicator size="small" color="#2563eb" style={styles.loader} />
         ) : (
           <View style={styles.appointmentsContainer}>
             {upcomingAppointments.length === 0 ? (
@@ -336,7 +336,7 @@ export default function HomeScreen() {
 
             {notifications.length > 0 && unreadCount > 0 && (
               <TouchableOpacity style={styles.markAllReadBtn} onPress={handleMarkAllAsRead}>
-                <Ionicons name="checkmark-done" size={16} color="#0D9488" style={{ marginRight: 6 }} />
+                <Ionicons name="checkmark-done" size={16} color="#2563eb" style={{ marginRight: 6 }} />
                 <Text style={styles.markAllReadText}>Mark all as read</Text>
               </TouchableOpacity>
             )}
@@ -390,13 +390,13 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: '#E6F4F1',
+    backgroundColor: '#EFF6FF',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 15,
   },
   avatarText: {
-    color: '#0D9488',
+    color: '#2563eb',
     fontSize: 20,
     fontWeight: '800',
   },
@@ -564,7 +564,7 @@ const styles = StyleSheet.create({
   markAllReadText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#0D9488',
+    color: '#2563eb',
   },
   notificationCard: {
     flexDirection: 'row',
@@ -606,7 +606,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#0D9488',
+    backgroundColor: '#2563eb',
     marginLeft: 8,
   },
   notificationCardMsg: {

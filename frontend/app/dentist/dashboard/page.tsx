@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import ChangePasswordModal from "@/components/ChangePasswordModal";
 import PatientDetailsModal from "@/components/PatientDetailsModal";
 import { 
@@ -21,7 +22,8 @@ import {
   CreditCard,
   MessageSquare,
   FileText,
-  Bell
+  Bell,
+  User
 } from "lucide-react";
 
 interface UserProfile {
@@ -57,6 +59,12 @@ interface Appointment {
   time: string;
   treatment: string;
   status: string;
+  notes?: string;
+  allergies?: string;
+  complains?: string;
+  onExamination?: string;
+  treatmentPlan?: string;
+  treatmentDone?: string;
 }
 
 export default function DentistDashboard() {
@@ -96,6 +104,71 @@ export default function DentistDashboard() {
   const [newApptTime, setNewApptTime] = useState("09:00 AM");
   const [newApptTreatment, setNewApptTreatment] = useState("Regular Checkup");
   const [newApptNotes, setNewApptNotes] = useState("");
+
+  // Dentist profile states & handlers
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [profilePhone, setProfilePhone] = useState("");
+  const [editForm, setEditForm] = useState({
+    fullName: "",
+    email: "",
+    phoneNumber: ""
+  });
+
+  const fetchProfilePhone = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/admin/profile`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setProfilePhone(data.phoneNumber || "");
+      }
+    } catch (err) {
+      console.error("Error fetching staff profile phone:", err);
+    }
+  };
+
+  const handleUpdateProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingProfile(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/admin/profile`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(editForm)
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert("Profile updated successfully!");
+        setProfilePhone(data.phoneNumber || "");
+        setIsEditingProfile(false);
+        // Sync with localStorage
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) {
+          const userObj = JSON.parse(storedUser);
+          userObj.fullName = data.fullName;
+          userObj.email = data.email;
+          localStorage.setItem("user", JSON.stringify(userObj));
+          setUser(userObj);
+        }
+      } else {
+        alert(data.message || "Failed to update profile.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Network error updating profile.");
+    } finally {
+      setSavingProfile(false);
+    }
+  };
 
   // Cancel Handler
   const handleCancelAppointment = async (apptId: string) => {
@@ -304,6 +377,7 @@ export default function DentistDashboard() {
         }
         setUser(parsedUser);
         fetchData(parsedUser.id);
+        fetchProfilePhone();
         setLoading(false);
       } catch (err) {
         console.error("Error parsing user profile in Dentist Dashboard:", err);
@@ -361,6 +435,7 @@ export default function DentistDashboard() {
     { title: "Billing", id: "billing", icon: CreditCard },
     { title: "Messages", id: "messages", icon: MessageSquare },
     { title: "Reports", id: "reports", icon: FileText },
+    { title: "My Profile", id: "profile", icon: User },
   ];
 
   const dentistAppointments = appointments.filter(appt => {
@@ -400,8 +475,16 @@ export default function DentistDashboard() {
     <div className="flex min-h-screen bg-slate-50">
       {/* Sidebar */}
       <aside className="w-64 bg-white border-r border-slate-200 flex flex-col px-6 py-8 fixed h-screen">
-        <div className="text-2xl font-black text-blue-800 mb-10 px-2 flex items-center gap-2">
-          <div className="bg-blue-600 p-1.5 rounded-lg text-white">D+</div> Dentplus
+        <div className="mb-10 px-2 flex justify-start">
+          <Image 
+            src="/logo.png" 
+            alt="Dentplus Logo" 
+            width={160} 
+            height={40} 
+            priority
+            style={{ width: 'auto', height: 'auto' }}
+            className="object-contain"
+          />
         </div>
 
         {/* Menu */}
@@ -595,6 +678,8 @@ export default function DentistDashboard() {
                             <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                               appt.status === "Completed" ? "bg-emerald-50 text-emerald-700 font-bold uppercase tracking-wider" :
                               appt.status === "Scheduled" ? "bg-blue-50 text-blue-700 font-bold uppercase tracking-wider" :
+                              appt.status === "Arrived" ? "bg-purple-50 text-purple-700 font-bold uppercase tracking-wider" :
+                              appt.status === "Confirmed" ? "bg-emerald-50 text-emerald-700 font-bold uppercase tracking-wider" :
                               appt.status === "Cancelled" ? "bg-red-50 text-red-700 font-bold uppercase tracking-wider" :
                               "bg-slate-100 text-slate-600"
                             }`}>
@@ -612,6 +697,18 @@ export default function DentistDashboard() {
                             >
                               Details
                             </button>
+                            
+                            {appt.status === 'Completed' && (
+                              <button
+                                onClick={() => {
+                                  setNewApptPatientId(appt.patient?._id || "");
+                                  setIsNewAppointmentOpen(true);
+                                }}
+                                className="px-2.5 py-1.5 text-xs bg-blue-50 border hover:bg-blue-600 hover:text-white border-blue-250 rounded-lg text-blue-600 transition font-semibold cursor-pointer"
+                              >
+                                New Appointment (Next Visit)
+                              </button>
+                            )}
                             
                             {appt.status !== 'Completed' && appt.status !== 'Cancelled' && (
                               <>
@@ -798,6 +895,8 @@ export default function DentistDashboard() {
                             <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
                               appt.status === 'Completed' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
                               appt.status === 'Scheduled' ? 'bg-blue-50 text-blue-700 border-blue-100' :
+                              appt.status === 'Arrived' ? 'bg-purple-50 text-purple-700 border-purple-100' :
+                              appt.status === 'Confirmed' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
                               appt.status === 'Cancelled' ? 'bg-rose-50 text-rose-700 border-rose-100' :
                               'bg-slate-50 text-slate-600 border-slate-100'
                             }`}>
@@ -828,7 +927,118 @@ export default function DentistDashboard() {
           </div>
         )}
 
-        {activeTab !== "dashboard" && activeTab !== "patients" && activeTab !== "appointments" && (
+        {activeTab === "profile" && (
+          <div className="space-y-6 max-w-3xl animate-fade-in">
+            <div>
+              <h3 className="text-2xl font-bold text-slate-800">My Profile</h3>
+              <p className="text-slate-500 text-sm font-semibold">Personal details and staff record identities</p>
+            </div>
+
+            <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm space-y-6">
+              <div className="flex items-center gap-4 border-b pb-6">
+                <div className="w-16 h-16 rounded-full bg-blue-700 text-white font-bold flex items-center justify-center text-xl shadow-inner">
+                  {userInitials}
+                </div>
+                <div>
+                  <h4 className="text-xl font-bold text-slate-800">{user?.fullName}</h4>
+                  <span className="inline-block mt-1 bg-blue-50 text-blue-700 text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">
+                    Dentist
+                  </span>
+                </div>
+              </div>
+
+              {!isEditingProfile ? (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                    <div>
+                      <p className="text-slate-400 font-semibold uppercase text-xs">Full Name</p>
+                      <p className="font-bold text-slate-800 mt-1">{user?.fullName}</p>
+                    </div>
+                    <div>
+                      <p className="text-slate-400 font-semibold uppercase text-xs">Email Address</p>
+                      <p className="font-bold text-slate-800 mt-1">{user?.email}</p>
+                    </div>
+                    <div>
+                      <p className="text-slate-400 font-semibold uppercase text-xs">Phone Number</p>
+                      <p className="font-bold text-slate-800 mt-1">{profilePhone || "N/A"}</p>
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t border-slate-100">
+                    <button
+                      onClick={() => {
+                        setEditForm({
+                          fullName: user?.fullName || '',
+                          email: user?.email || '',
+                          phoneNumber: profilePhone || ''
+                        });
+                        setIsEditingProfile(true);
+                      }}
+                      className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-3 rounded-xl transition cursor-pointer text-sm shadow shadow-blue-100"
+                    >
+                      Edit Profile
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <form onSubmit={handleUpdateProfile} className="space-y-5 text-sm">
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-1">Full Name *</label>
+                    <input 
+                      type="text"
+                      value={editForm.fullName}
+                      onChange={e => setEditForm({ ...editForm, fullName: e.target.value })}
+                      className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 font-medium"
+                      required
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 mb-1">Email Address *</label>
+                      <input 
+                        type="email"
+                        value={editForm.email}
+                        onChange={e => setEditForm({ ...editForm, email: e.target.value })}
+                        className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 font-medium"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 mb-1">Phone Number</label>
+                      <input 
+                        type="text"
+                        value={editForm.phoneNumber}
+                        onChange={e => setEditForm({ ...editForm, phoneNumber: e.target.value })}
+                        className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 font-medium"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3 pt-4 border-t border-slate-100">
+                    <button 
+                      type="button"
+                      onClick={() => setIsEditingProfile(false)}
+                      className="px-5 py-3 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 font-bold transition cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button 
+                      type="submit"
+                      disabled={savingProfile}
+                      className="px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold transition shadow-lg shadow-blue-100 disabled:opacity-50 cursor-pointer"
+                    >
+                      {savingProfile ? "Saving..." : "Save Changes"}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          </div>
+        )}
+
+        {activeTab !== "dashboard" && activeTab !== "patients" && activeTab !== "appointments" && activeTab !== "profile" && (
           <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-12 text-center">
             <Stethoscope className="mx-auto text-slate-300 mb-4" size={48} />
             <h3 className="text-xl font-bold text-slate-900 mb-1">{activeTab.toUpperCase()} Section</h3>
@@ -874,12 +1084,50 @@ export default function DentistDashboard() {
                 <span className={`text-xs px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider ${
                   selectedAppt.status === "Completed" ? "bg-emerald-50 text-emerald-700 border border-emerald-100" :
                   selectedAppt.status === "Scheduled" ? "bg-blue-50 text-blue-700 border border-blue-100" :
+                  selectedAppt.status === "Arrived" ? "bg-purple-50 text-purple-700 border border-purple-100" :
                   selectedAppt.status === "Cancelled" ? "bg-red-50 text-red-700 border border-red-100" :
                   "bg-slate-100 text-slate-600"
                 }`}>
                   {selectedAppt.status}
                 </span>
               </div>
+              {(selectedAppt.complains || selectedAppt.onExamination || selectedAppt.treatmentPlan || selectedAppt.treatmentDone || selectedAppt.allergies) && (
+                <div className="mt-4 pt-4 border-t border-slate-100 space-y-2">
+                  <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wider mb-2">Check-In Clinical Details</h4>
+                  <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 space-y-2 text-xs">
+                    {selectedAppt.allergies && (
+                      <div>
+                        <span className="font-bold text-slate-500 block uppercase text-[9px] tracking-wider">Allergies & Medical Warnings</span>
+                        <p className="text-amber-850 font-semibold mt-0.5 bg-amber-50 px-1.5 py-0.5 rounded w-fit">{selectedAppt.allergies}</p>
+                      </div>
+                    )}
+                    {selectedAppt.complains && (
+                      <div>
+                        <span className="font-bold text-slate-500 block uppercase text-[9px] tracking-wider">Complains</span>
+                        <p className="text-slate-800 font-medium mt-0.5">{selectedAppt.complains}</p>
+                      </div>
+                    )}
+                    {selectedAppt.onExamination && (
+                      <div>
+                        <span className="font-bold text-slate-500 block uppercase text-[9px] tracking-wider">On Examination Findings</span>
+                        <p className="text-slate-800 font-medium mt-0.5">{selectedAppt.onExamination}</p>
+                      </div>
+                    )}
+                    {selectedAppt.treatmentPlan && (
+                      <div>
+                        <span className="font-bold text-slate-500 block uppercase text-[9px] tracking-wider">Proposed Treatment Plan</span>
+                        <p className="text-slate-800 font-medium mt-0.5">{selectedAppt.treatmentPlan}</p>
+                      </div>
+                    )}
+                    {selectedAppt.treatmentDone && (
+                      <div>
+                        <span className="font-bold text-slate-500 block uppercase text-[9px] tracking-wider">Treatment Done</span>
+                        <p className="text-slate-800 font-medium mt-0.5">{selectedAppt.treatmentDone}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             <button

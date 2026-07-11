@@ -12,6 +12,7 @@ interface Patient {
   gender: string;
   nic: string;
   homeAddress?: string;
+  allergies?: string;
 }
 
 interface Appointment {
@@ -19,8 +20,13 @@ interface Appointment {
   treatment: string;
   date: string;
   time: string;
-  status: 'Pending' | 'Confirmed' | 'In Progress' | 'Completed' | 'Cancelled';
+  status: 'Pending' | 'Confirmed' | 'Scheduled' | 'Arrived' | 'In Progress' | 'Completed' | 'Cancelled';
   notes?: string;
+  allergies?: string;
+  complains?: string;
+  onExamination?: string;
+  treatmentPlan?: string;
+  treatmentDone?: string;
   dentist?: {
     fullName: string;
     email: string;
@@ -81,6 +87,10 @@ export default function PatientDetailsModal({ isOpen, onClose, patient }: Patien
     switch (status) {
       case 'Confirmed':
         return 'bg-emerald-50 text-emerald-700 border-emerald-100';
+      case 'Scheduled':
+        return 'bg-blue-50 text-blue-750 border-blue-100';
+      case 'Arrived':
+        return 'bg-purple-50 text-purple-700 border-purple-100';
       case 'Completed':
         return 'bg-indigo-50 text-indigo-700 border-indigo-100';
       case 'Cancelled':
@@ -176,6 +186,16 @@ export default function PatientDetailsModal({ isOpen, onClose, patient }: Patien
                 </p>
               </div>
             </div>
+
+            <div className="flex items-start gap-3 pt-2">
+              <AlertCircle size={18} className="text-amber-500 mt-1 shrink-0" />
+              <div>
+                <p className="text-xs text-slate-400 font-semibold uppercase">Allergies</p>
+                <p className={`font-semibold text-sm mt-1 leading-relaxed ${patient.allergies ? 'text-amber-850 bg-amber-50/70 border border-amber-100/60 rounded-xl px-3 py-1.5 font-medium' : 'text-slate-700'}`}>
+                  {patient.allergies || 'None declared.'}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -229,11 +249,47 @@ export default function PatientDetailsModal({ isOpen, onClose, patient }: Patien
                             </span>
                           </td>
                         </tr>
-                        {appt.notes && (
-                          <tr className="border-b border-slate-50 bg-slate-50/20">
-                            <td colSpan={4} className="p-3 pt-1 text-xs text-slate-500 font-medium italic">
-                              <span className="font-semibold text-slate-400 not-italic mr-1">Note:</span>
-                              "{appt.notes}"
+                        {(appt.notes || appt.complains || appt.onExamination || appt.treatmentPlan || appt.treatmentDone || appt.allergies) && (
+                          <tr className="border-b border-slate-50 bg-slate-50/25">
+                            <td colSpan={4} className="p-4 pt-2 text-xs text-slate-600">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50/50 p-3 rounded-xl border border-slate-100/50">
+                                {appt.complains && (
+                                  <div>
+                                    <span className="font-bold text-slate-400 block uppercase tracking-wider text-[9px]">Complains</span>
+                                    <p className="text-slate-700 mt-0.5 font-medium">{appt.complains}</p>
+                                  </div>
+                                )}
+                                {appt.onExamination && (
+                                  <div>
+                                    <span className="font-bold text-slate-400 block uppercase tracking-wider text-[9px]">On Examination</span>
+                                    <p className="text-slate-700 mt-0.5 font-medium">{appt.onExamination}</p>
+                                  </div>
+                                )}
+                                {appt.treatmentPlan && (
+                                  <div>
+                                    <span className="font-bold text-slate-400 block uppercase tracking-wider text-[9px]">Proposed Plan</span>
+                                    <p className="text-slate-700 mt-0.5 font-medium">{appt.treatmentPlan}</p>
+                                  </div>
+                                )}
+                                {appt.treatmentDone && (
+                                  <div>
+                                    <span className="font-bold text-slate-400 block uppercase tracking-wider text-[9px]">Treatment Done</span>
+                                    <p className="text-slate-700 mt-0.5 font-medium">{appt.treatmentDone}</p>
+                                  </div>
+                                )}
+                                {appt.allergies && (
+                                  <div>
+                                    <span className="font-bold text-slate-400 block uppercase tracking-wider text-[9px]">Allergies</span>
+                                    <p className="text-amber-800 mt-0.5 font-semibold bg-amber-50 px-1.5 py-0.5 rounded w-fit border border-amber-100/50">{appt.allergies}</p>
+                                  </div>
+                                )}
+                                {appt.notes && (
+                                  <div className="sm:col-span-2 border-t border-slate-200/40 pt-1.5 mt-1">
+                                    <span className="font-bold text-slate-400 block uppercase tracking-wider text-[9px]">Dentist Notes</span>
+                                    <p className="text-slate-700 mt-0.5 font-medium italic">"{appt.notes}"</p>
+                                  </div>
+                                )}
+                              </div>
                             </td>
                           </tr>
                         )}

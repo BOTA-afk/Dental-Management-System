@@ -133,8 +133,8 @@ const styles = StyleSheet.create({
   label: { fontSize: 14, fontWeight: '600', marginLeft: 10, marginBottom: 5 },
   genderRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 15 },
   genderBtn: { flex: 1, padding: 15, alignItems: 'center', borderRadius: 30, backgroundColor: '#F9FAFB', marginHorizontal: 5 },
-  activeGender: { backgroundColor: '#0EA5E9' },
-  button: { backgroundColor: '#0EA5E9', borderRadius: 30, height: 60, justifyContent: 'center', alignItems: 'center', marginTop: 10 },
+  activeGender: { backgroundColor: '#2563eb' },
+  button: { backgroundColor: '#2563eb', borderRadius: 30, height: 60, justifyContent: 'center', alignItems: 'center', marginTop: 10 },
   buttonText: { color: '#FFFFFF', fontSize: 18, fontWeight: 'bold' },
   errorText: { color: 'red', textAlign: 'center', marginBottom: 10 }
 });

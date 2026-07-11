@@ -5,11 +5,12 @@ const patientSchema = new mongoose.Schema({
   name: { type: String, required: true },
   dob: { type: Date, required: true },
   gender: { type: String, required: true },
-  phoneNumber: { type: String, required: true, unique: true },
+  phoneNumber: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   nic: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   homeAddress: { type: String, required: true },
+  allergies: { type: String, default: "" },
   resetOtp: { type: String },
   resetOtpExpires: { type: Date },
 }, { timestamps: true });

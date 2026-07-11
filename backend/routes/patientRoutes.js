@@ -3,6 +3,7 @@ import {
   registerPatient,
   loginPatient,
   getPatientProfile,
+  updatePatientProfile,
   forgotPassword,
   verifyOtp,
   resetPassword,
@@ -24,6 +25,7 @@ const router = express.Router();
 router.post('/signup', registerPatient);
 router.post('/login', loginPatient);
 router.get('/profile', verifyToken, getPatientProfile);
+router.put('/profile', verifyToken, updatePatientProfile);
 
 // Password Reset Routes
 router.post('/forgot-password', forgotPassword);

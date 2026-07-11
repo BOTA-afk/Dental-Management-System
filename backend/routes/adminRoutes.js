@@ -10,6 +10,7 @@ import {
   updateAppointment,
   deleteAppointment,
   addPatient,
+  updatePatient,
   getBills,
   createBill,
   updateBill,
@@ -20,7 +21,9 @@ import {
   getDentistNotifications,
   markDentistNotificationsAsRead,
   getLatestClinicalDetails,
-  checkInPatient
+  checkInPatient,
+  getStaffProfile,
+  updateStaffProfile
 } from "../controllers/adminController.js";
 import { verifyToken, isAdmin, isStaff, isAdminOrAssistant } from '../middleware/authMiddleware.js';
 import { getAuthUrl } from '../utils/googleCalendarService.js';
@@ -33,6 +36,8 @@ router.post("/create-account", verifyToken, isAdminOrAssistant, createAccount);
 router.get('/staff', verifyToken, isAdminOrAssistant, getStaff);
 router.post('/reset-staff-password', verifyToken, isAdminOrAssistant, resetStaffPassword);
 router.post('/update-password', verifyToken, updatePassword);
+router.get('/profile', verifyToken, getStaffProfile);
+router.put('/profile', verifyToken, updateStaffProfile);
 router.get('/dentist/notifications', verifyToken, isStaff, getDentistNotifications);
 router.put('/dentist/notifications/read', verifyToken, isStaff, markDentistNotificationsAsRead);
 router.get('/calendar/auth', (req, res) => {
@@ -44,6 +49,7 @@ router.post('/patients/:patientId/check-in', verifyToken, isStaff, checkInPatien
 // Appointment & Patient management routes
 router.get('/patients', verifyToken, isStaff, getPatients);
 router.post('/patients', verifyToken, isStaff, addPatient);
+router.put('/patients/:id', verifyToken, isStaff, updatePatient);
 router.get('/appointments', verifyToken, isStaff, getAppointments);
 router.post('/appointments', verifyToken, isStaff, createAppointment);
 router.put('/appointments/:id', verifyToken, isStaff, updateAppointment);

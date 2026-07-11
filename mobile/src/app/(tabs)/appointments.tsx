@@ -225,7 +225,7 @@ export default function AppointmentsScreen() {
   const getStatusColor = (status: Appointment['status']) => {
     switch (status) {
       case 'Confirmed':
-        return { bg: '#E6F4F1', text: '#0D9488' };
+        return { bg: '#EFF6FF', text: '#2563eb' };
       case 'Completed':
         return { bg: '#DCFCE7', text: '#16A34A' };
       case 'Cancelled':
@@ -307,7 +307,7 @@ export default function AppointmentsScreen() {
 
         {/* Loading Indicator */}
         {loading && !refreshing ? (
-          <ActivityIndicator size="large" color="#0D9488" style={{ marginTop: 40 }} />
+          <ActivityIndicator size="large" color="#2563eb" style={{ marginTop: 40 }} />
         ) : (
           <FlatList
             data={filteredAppointments}
@@ -319,8 +319,8 @@ export default function AppointmentsScreen() {
               <RefreshControl
                 refreshing={refreshing}
                 onRefresh={onRefresh}
-                colors={["#0D9488"]}
-                tintColor="#0D9488"
+                colors={["#2563eb"]}
+                tintColor="#2563eb"
               />
             }
             ListEmptyComponent={
@@ -495,7 +495,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   tabTextActive: {
-    color: '#0D9488',
+    color: '#2563eb',
     fontWeight: '700',
   },
   listContainer: {
@@ -593,10 +593,10 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#0D9488',
+    backgroundColor: '#2563eb',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#0D9488',
+    shadowColor: '#2563eb',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.3,
     shadowRadius: 10,
@@ -649,7 +649,7 @@ const styles = StyleSheet.create({
     width: 110,
   },
   activeDentistCard: {
-    borderColor: '#0D9488',
+    borderColor: '#2563eb',
     backgroundColor: '#F0FDFA',
   },
   avatar: {
@@ -662,7 +662,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   activeAvatar: {
-    backgroundColor: '#0D9488',
+    backgroundColor: '#2563eb',
   },
   avatarText: {
     fontSize: 14,
@@ -679,7 +679,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   activeDentistName: {
-    color: '#0D9488',
+    color: '#2563eb',
     fontWeight: '700',
   },
   treatmentRow: {
@@ -697,7 +697,7 @@ const styles = StyleSheet.create({
   },
   activeTreatmentBtn: {
     backgroundColor: '#F0FDFA',
-    borderColor: '#0D9488',
+    borderColor: '#2563eb',
   },
   treatmentBtnText: {
     fontSize: 13,
@@ -705,7 +705,7 @@ const styles = StyleSheet.create({
     color: '#475569',
   },
   activeTreatmentBtnText: {
-    color: '#0D9488',
+    color: '#2563eb',
     fontWeight: '700',
   },
   dateSelector: {
@@ -737,7 +737,7 @@ const styles = StyleSheet.create({
   },
   activeTimeBtn: {
     backgroundColor: '#F0FDFA',
-    borderColor: '#0D9488',
+    borderColor: '#2563eb',
   },
   timeBtnText: {
     fontSize: 13,
@@ -745,7 +745,7 @@ const styles = StyleSheet.create({
     color: '#475569',
   },
   activeTimeBtnText: {
-    color: '#0D9488',
+    color: '#2563eb',
     fontWeight: '700',
   },
   bookedTimeBtn: {
@@ -768,12 +768,12 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
   },
   submitBtn: {
-    backgroundColor: '#0D9488',
+    backgroundColor: '#2563eb',
     borderRadius: 14,
     paddingVertical: 14,
     alignItems: 'center',
     marginTop: 24,
-    shadowColor: '#0D9488',
+    shadowColor: '#2563eb',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 6,

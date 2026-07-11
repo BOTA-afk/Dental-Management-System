@@ -124,7 +124,7 @@ export const getStaff = async (_req, res) => {
 
 export const getPatients = async (req, res) => {
   try {
-    const patients = await Patient.find({}).select("name email phoneNumber dob gender nic homeAddress");
+    const patients = await Patient.find({}).select("name email phoneNumber dob gender nic homeAddress allergies");
     res.json(patients);
   } catch (error) {
     res.status(500).json({ message: "Server error fetching patients", error: error.message });
@@ -433,6 +433,48 @@ export const addPatient = async (req, res) => {
     res.status(201).json({ message: "Patient record created successfully", patient: { _id: newPatient._id, name, email } });
   } catch (error) {
     res.status(500).json({ message: "Server error creating patient", error: error.message });
+  }
+};
+
+export const updatePatient = async (req, res) => {
+  const { id } = req.params;
+  const { name, email, phoneNumber, dob, gender, nic, homeAddress, allergies } = req.body;
+
+  try {
+    if (email) {
+      const existingEmail = await Patient.findOne({ email, _id: { $ne: id } });
+      if (existingEmail) {
+        return res.status(400).json({ message: "Email is already in use by another patient." });
+      }
+    }
+
+    if (phoneNumber) {
+      const existingPhone = await Patient.findOne({ phoneNumber, _id: { $ne: id } });
+      if (existingPhone) {
+        return res.status(400).json({ message: "Phone number is already in use by another patient." });
+      }
+    }
+
+    if (nic) {
+      const existingNIC = await Patient.findOne({ nic, _id: { $ne: id } });
+      if (existingNIC) {
+        return res.status(400).json({ message: "NIC is already in use by another patient." });
+      }
+    }
+
+    const updatedPatient = await Patient.findByIdAndUpdate(
+      id,
+      { name, email, phoneNumber, dob, gender, nic, homeAddress, allergies },
+      { new: true }
+    ).select("-password");
+
+    if (!updatedPatient) {
+      return res.status(404).json({ message: "Patient not found." });
+    }
+
+    res.json({ message: "Patient record updated successfully", patient: updatedPatient });
+  } catch (error) {
+    res.status(500).json({ message: "Server error updating patient", error: error.message });
   }
 };
 
@@ -785,9 +827,12 @@ export const checkInPatient = async (req, res) => {
     appt.onExamination = onExamination || '';
     appt.treatmentPlan = treatmentPlan || '';
     appt.treatmentDone = treatmentDone || '';
-    appt.status = 'Confirmed'; // Mark confirmed/active on check-in
+    appt.status = 'Arrived'; // Mark arrived on check-in
 
     await appt.save();
+
+    // Also persist allergies on the Patient profile
+    await Patient.findByIdAndUpdate(patientId, { allergies: allergies || '' });
     
     // Trigger Google Calendar if confirmed
     try {
@@ -810,5 +855,87 @@ export const checkInPatient = async (req, res) => {
     res.json({ message: "Patient checked in successfully!", appointment: appt });
   } catch (error) {
     res.status(500).json({ message: "Server error checking in patient", error: error.message });
+  }
+};
+
+export const getStaffProfile = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const userRole = req.user.role;
+
+    let account;
+    if (userRole === 'system_admin') {
+      account = await Admin.findById(userId).select("-password");
+    } else {
+      account = await User.findById(userId).select("-password");
+    }
+
+    if (!account) {
+      return res.status(404).json({ message: "Account not found." });
+    }
+
+    res.json({
+      id: account._id,
+      fullName: account.fullName,
+      email: account.email,
+      phoneNumber: account.phoneNumber || '',
+      role: userRole
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error: " + error.message });
+  }
+};
+
+export const updateStaffProfile = async (req, res) => {
+  try {
+    const { fullName, email, phoneNumber } = req.body;
+    const userId = req.user.id;
+    const userRole = req.user.role;
+
+    let updatedAccount;
+
+    if (userRole === 'system_admin') {
+      if (email) {
+        const existingAdminEmail = await Admin.findOne({ email, _id: { $ne: userId } });
+        const existingUserEmail = await User.findOne({ email });
+        if (existingAdminEmail || existingUserEmail) {
+          return res.status(400).json({ message: "Email is already in use by another account." });
+        }
+      }
+
+      updatedAccount = await Admin.findByIdAndUpdate(
+        userId,
+        { fullName, email },
+        { new: true }
+      ).select("-password");
+    } else {
+      if (email) {
+        const existingAdminEmail = await Admin.findOne({ email });
+        const existingUserEmail = await User.findOne({ email, _id: { $ne: userId } });
+        if (existingAdminEmail || existingUserEmail) {
+          return res.status(400).json({ message: "Email is already in use by another account." });
+        }
+      }
+
+      updatedAccount = await User.findByIdAndUpdate(
+        userId,
+        { fullName, email, phoneNumber },
+        { new: true }
+      ).select("-password");
+    }
+
+    if (!updatedAccount) {
+      return res.status(404).json({ message: "Account not found." });
+    }
+
+    res.json({
+      id: updatedAccount._id,
+      fullName: updatedAccount.fullName,
+      email: updatedAccount.email,
+      phoneNumber: updatedAccount.phoneNumber || '',
+      role: userRole
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error updating profile: " + error.message });
   }
 };

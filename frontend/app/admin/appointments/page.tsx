@@ -27,7 +27,7 @@ interface Appointment {
   treatment: string;
   date: string;
   time: string;
-  status: 'Pending' | 'Confirmed' | 'In Progress' | 'Completed' | 'Cancelled';
+  status: 'Pending' | 'Confirmed' | 'Scheduled' | 'Arrived' | 'In Progress' | 'Completed' | 'Cancelled';
   notes?: string;
 }
 
@@ -37,6 +37,7 @@ export default function AppointmentsPage() {
   const [filteredAppointments, setFilteredAppointments] = useState<Appointment[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+  const [preselectedPatientId, setPreselectedPatientId] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -135,6 +136,8 @@ export default function AppointmentsPage() {
   const getStatusStyle = (status: string) => {
     switch (status) {
       case 'Confirmed': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+      case 'Scheduled': return 'bg-blue-50 text-blue-700 border-blue-200';
+      case 'Arrived': return 'bg-purple-50 text-purple-700 border-purple-200';
       case 'In Progress': return 'bg-sky-50 text-sky-700 border-sky-200';
       case 'Pending': return 'bg-amber-50 text-amber-700 border-amber-200';
       case 'Cancelled': return 'bg-rose-50 text-rose-700 border-rose-200';
@@ -237,12 +240,25 @@ export default function AppointmentsPage() {
                   )}
 
                   <div className="flex flex-wrap gap-2 justify-end">
-                    <button 
-                      onClick={() => handleEditClick(appt)}
-                      className="border border-slate-200 px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 transition cursor-pointer"
-                    >
-                      Reschedule
-                    </button>
+                    {appt.status === 'Completed' ? (
+                      <button 
+                        onClick={() => {
+                          setPreselectedPatientId(appt.patient?._id);
+                          setSelectedAppointment(null);
+                          setIsModalOpen(true);
+                        }}
+                        className="bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white border border-blue-100 px-4 py-2 rounded-xl text-sm font-semibold transition cursor-pointer"
+                      >
+                        New Appointment (Next Visit)
+                      </button>
+                    ) : (
+                      <button 
+                        onClick={() => handleEditClick(appt)}
+                        className="border border-slate-200 px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 transition cursor-pointer"
+                      >
+                        Reschedule
+                      </button>
+                    )}
                     {appt.status !== 'Confirmed' && appt.status !== 'Completed' && appt.status !== 'Cancelled' && (
                       <button 
                         onClick={() => handleUpdateStatus(appt._id, 'Confirmed')}
@@ -279,8 +295,10 @@ export default function AppointmentsPage() {
           onClose={() => {
             setIsModalOpen(false);
             setSelectedAppointment(null);
+            setPreselectedPatientId(undefined);
           }} 
           appointment={selectedAppointment}
+          preselectedPatientId={preselectedPatientId}
           onSuccess={fetchAppointments}
         />
       </main>

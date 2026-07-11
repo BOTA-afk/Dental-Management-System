@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Image from "next/image";
 import {
   LayoutDashboard,
   CalendarDays,
@@ -34,8 +35,13 @@ interface Appointment {
   };
   date: string;
   time: string;
-  status: 'Pending' | 'Confirmed' | 'In Progress' | 'Completed' | 'Cancelled';
+  status: 'Pending' | 'Confirmed' | 'Scheduled' | 'Arrived' | 'In Progress' | 'Completed' | 'Cancelled';
   notes?: string;
+  allergies?: string;
+  complains?: string;
+  onExamination?: string;
+  treatmentPlan?: string;
+  treatmentDone?: string;
 }
 
 interface Notification {
@@ -61,6 +67,71 @@ const timeSlots = ['09:00 AM', '10:00 AM', '11:00 AM', '01:30 PM', '02:30 PM', '
 
 export default function PatientDashboard() {
   const [patient, setPatient] = useState<any>(null);
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [editForm, setEditForm] = useState({
+    name: "",
+    phoneNumber: "",
+    nic: "",
+    dob: "",
+    gender: "",
+    homeAddress: "",
+    allergies: ""
+  });
+
+  const startEditing = () => {
+    setEditForm({
+      name: patient?.name || '',
+      phoneNumber: patient?.phoneNumber || '',
+      nic: patient?.nic || '',
+      dob: patient?.dob ? new Date(patient.dob).toISOString().split('T')[0] : '',
+      gender: patient?.gender || '',
+      homeAddress: patient?.homeAddress || '',
+      allergies: patient?.allergies || ''
+    });
+    setIsEditingProfile(true);
+  };
+
+  const calculateAge = (dobString: string) => {
+    if (!dobString) return "";
+    const today = new Date();
+    const birthDate = new Date(dobString);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age >= 0 ? `${age} years` : "";
+  };
+
+  const handlePatientProfileUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingProfile(true);
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001"}/api/patient/profile`, {
+        method: "PUT",
+        headers: {
+          "Authorization": `Bearer ${localStorage.getItem("token")}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(editForm)
+      });
+      const data = await response.json();
+      if (response.ok) {
+        alert("Profile updated successfully!");
+        setPatient(data);
+        setIsEditingProfile(false);
+      } else {
+        alert(data.message || "Failed to update profile.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Network error updating profile.");
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [dentists, setDentists] = useState<any[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -68,6 +139,7 @@ export default function PatientDashboard() {
   
   const [activeTab, setActiveTab] = useState<string>("Dashboard");
   const [isBookingOpen, setIsBookingOpen] = useState(false);
+  const [isMedicalRecordsOpen, setIsMedicalRecordsOpen] = useState(false);
   const [bookingLoading, setBookingLoading] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState<string | null>(null);
   
@@ -367,6 +439,10 @@ export default function PatientDashboard() {
     switch (status) {
       case 'Confirmed':
         return <span className="flex items-center gap-1.5 rounded-full bg-green-50 text-green-700 border border-green-200 px-3.5 py-1.5 text-xs font-bold uppercase tracking-wider h-fit"><CheckCircle2 size={14} /> Confirmed</span>;
+      case 'Scheduled':
+        return <span className="flex items-center gap-1.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 px-3.5 py-1.5 text-xs font-bold uppercase tracking-wider h-fit"><Clock size={14} /> Scheduled</span>;
+      case 'Arrived':
+        return <span className="flex items-center gap-1.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200 px-3.5 py-1.5 text-xs font-bold uppercase tracking-wider h-fit"><CheckCircle2 size={14} /> Arrived</span>;
       case 'Cancelled':
         return <span className="flex items-center gap-1.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200 px-3.5 py-1.5 text-xs font-bold uppercase tracking-wider h-fit"><X size={14} /> Cancelled</span>;
       case 'Completed':
@@ -394,51 +470,59 @@ export default function PatientDashboard() {
   return (
     <div className="flex min-h-screen bg-slate-50 text-slate-800">
       {/* Sidebar */}
-      <aside className="w-72 bg-white border-r p-6 flex flex-col justify-between fixed h-screen z-10">
-        <div>
-          <div className="flex items-center gap-2 mb-10 px-4">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg shadow-md shadow-blue-200" />
-            <h1 className="text-xl font-black text-slate-800">Dentplus</h1>
-          </div>
-          <nav className="space-y-2">
-            {menu.map((item, index) => {
-              const Icon = item.icon;
-              const isSelected = activeTab === item.title;
-              const showBadge = item.title === "Notifications" && unreadNotificationsCount > 0;
-              return (
-                <button
-                  key={index}
-                  onClick={() => setActiveTab(item.title)}
-                  className={`w-full flex items-center justify-between rounded-xl px-4 py-3 transition cursor-pointer font-semibold text-sm ${
-                    isSelected
-                      ? "bg-blue-600 text-white shadow-md shadow-blue-100"
-                      : "text-slate-600 hover:bg-slate-100 hover:text-blue-700"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <Icon size={18} />
-                    <span>{item.title}</span>
-                  </div>
-                  {showBadge && (
-                    <span className="bg-red-500 text-white text-[11px] font-bold px-2 py-0.5 rounded-full">
-                      {unreadNotificationsCount}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </nav>
+      <aside className="w-64 bg-white border-r border-slate-200 flex flex-col px-6 py-8 fixed h-screen z-10">
+        <div className="mb-10 px-2 flex justify-start">
+          <Image 
+            src="/logo.png" 
+            alt="Dentplus Logo" 
+            width={160} 
+            height={40} 
+            priority
+            style={{ width: 'auto', height: 'auto' }}
+            className="object-contain"
+          />
         </div>
+        <nav className="flex-1 space-y-2">
+          {menu.map((item, index) => {
+            const Icon = item.icon;
+            const isSelected = activeTab === item.title;
+            const showBadge = item.title === "Notifications" && unreadNotificationsCount > 0;
+            return (
+              <button
+                key={index}
+                onClick={() => setActiveTab(item.title)}
+                className={`w-full flex items-center justify-between rounded-xl px-4 py-3 transition cursor-pointer font-semibold text-sm ${
+                  isSelected
+                    ? "bg-blue-600 text-white shadow-md shadow-blue-100"
+                    : "text-slate-700 hover:bg-slate-100 hover:text-blue-700"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <Icon size={18} />
+                  <span>{item.title}</span>
+                </div>
+                {showBadge && (
+                  <span className="bg-red-500 text-white text-[11px] font-bold px-2 py-0.5 rounded-full">
+                    {unreadNotificationsCount}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </nav>
+        
+        {/* Logout Button */}
         <button 
           onClick={handleLogout}
-          className="flex items-center gap-3 text-red-500 font-semibold px-4 hover:bg-red-50 py-3 rounded-xl transition cursor-pointer"
+          className="mt-auto flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 font-semibold text-red-600 transition hover:bg-red-600 hover:text-white cursor-pointer w-full"
         >
-          <LogOut size={20} /> Logout
+          <LogOut size={18} />
+          Logout
         </button>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 p-8 ml-72">
+      <main className="flex-1 p-8 ml-64">
         {/* Top Header */}
         <header className="flex justify-between items-center mb-8">
           <div className="relative">
@@ -468,16 +552,19 @@ export default function PatientDashboard() {
             <div className="grid lg:grid-cols-3 gap-6 mb-8">
               <div 
                 onClick={() => setIsBookingOpen(true)}
-                className="rounded-3xl bg-gradient-to-r from-blue-600 to-cyan-500 text-white p-7 shadow-lg cursor-pointer hover:scale-[1.02] transition duration-200"
+                className="bg-white border border-slate-200 rounded-3xl p-7 shadow-sm hover:shadow-md hover:scale-[1.01] transition duration-200 cursor-pointer"
               >
-                <CalendarDays className="mb-6" size={34} />
-                <h3 className="text-xl font-bold">Book Appointment</h3>
-                <p className="opacity-90 mt-2 text-sm">Schedule your next dental visit.</p>
+                <CalendarDays className="mb-6 text-blue-600" size={34} />
+                <h3 className="text-xl font-bold text-slate-800">Book Appointment</h3>
+                <p className="text-slate-500 mt-2 text-sm font-semibold">Schedule your next dental visit.</p>
               </div>
-              <div className="rounded-3xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-7 shadow-lg hover:scale-[1.02] transition duration-200 cursor-pointer">
-                <FileText className="mb-6" size={34} />
-                <h3 className="text-xl font-bold">Medical Records</h3>
-                <p className="opacity-90 mt-2 text-sm">Access all your dental records.</p>
+              <div 
+                onClick={() => setIsMedicalRecordsOpen(true)}
+                className="bg-white border border-slate-200 rounded-3xl p-7 shadow-sm hover:shadow-md hover:scale-[1.01] transition duration-200 cursor-pointer"
+              >
+                <FileText className="mb-6 text-indigo-600" size={34} />
+                <h3 className="text-xl font-bold text-slate-800">Medical Records</h3>
+                <p className="text-slate-500 mt-2 text-sm font-semibold">Access all your dental records.</p>
               </div>
             </div>
 
@@ -795,10 +882,10 @@ export default function PatientDashboard() {
 
         {/* Tab View Selection: My Profile */}
         {activeTab === "My Profile" && (
-          <div className="space-y-6 max-w-3xl">
+          <div className="space-y-6 max-w-3xl animate-fade-in">
             <div>
               <h3 className="text-2xl font-bold text-slate-800">My Profile</h3>
-              <p className="text-slate-500 text-sm">Personal details and medical record identities</p>
+              <p className="text-slate-500 text-sm font-semibold">Personal details and medical record identities</p>
             </div>
 
             <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm space-y-6">
@@ -814,26 +901,154 @@ export default function PatientDashboard() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
-                <div>
-                  <p className="text-slate-400 font-semibold uppercase text-xs">Phone Number</p>
-                  <p className="font-bold text-slate-800 mt-1">{patient?.phoneNumber || "N/A"}</p>
+              {!isEditingProfile ? (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                    <div>
+                      <p className="text-slate-400 font-semibold uppercase text-xs">Phone Number</p>
+                      <p className="font-bold text-slate-800 mt-1">{patient?.phoneNumber || "N/A"}</p>
+                    </div>
+                    <div>
+                      <p className="text-slate-400 font-semibold uppercase text-xs">National ID Card (NIC)</p>
+                      <p className="font-bold text-slate-800 mt-1">{patient?.nic || "N/A"}</p>
+                    </div>
+                    <div>
+                      <p className="text-slate-400 font-semibold uppercase text-xs">Date of Birth</p>
+                      <p className="font-bold text-slate-800 mt-1 flex items-center gap-2">
+                        {patient?.dob ? new Date(patient.dob).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : "N/A"}
+                        {patient?.dob && (
+                          <span className="text-xs bg-blue-50 text-blue-600 px-2.5 py-0.5 rounded-full font-bold">
+                            {calculateAge(patient.dob)}
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-slate-400 font-semibold uppercase text-xs">Gender</p>
+                      <p className="font-bold text-slate-800 mt-1">{patient?.gender || "N/A"}</p>
+                    </div>
+                    <div>
+                      <p className="text-slate-400 font-semibold uppercase text-xs">Home Address</p>
+                      <p className="font-bold text-slate-800 mt-1">{patient?.homeAddress || "N/A"}</p>
+                    </div>
+                    <div>
+                      <p className="text-slate-400 font-semibold uppercase text-xs">Allergies</p>
+                      <p className="font-bold text-slate-850 mt-1 bg-amber-50 text-amber-800 border border-amber-100 rounded-xl px-4 py-2 font-medium">
+                        {patient?.allergies || "None declared"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="pt-4 border-t">
+                    <button
+                      onClick={startEditing}
+                      className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-2.5 rounded-xl transition cursor-pointer text-sm shadow shadow-blue-100"
+                    >
+                      Edit Profile
+                    </button>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-slate-400 font-semibold uppercase text-xs">National ID Card (NIC)</p>
-                  <p className="font-bold text-slate-800 mt-1">{patient?.nic || "N/A"}</p>
-                </div>
-                <div>
-                  <p className="text-slate-400 font-semibold uppercase text-xs">Date of Birth</p>
-                  <p className="font-bold text-slate-800 mt-1">
-                    {patient?.dob ? new Date(patient.dob).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : "N/A"}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-slate-400 font-semibold uppercase text-xs">Gender</p>
-                  <p className="font-bold text-slate-800 mt-1">{patient?.gender || "N/A"}</p>
-                </div>
-              </div>
+              ) : (
+                <form onSubmit={handlePatientProfileUpdate} className="space-y-4 text-sm">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block font-semibold text-slate-700 mb-1">Full Name *</label>
+                      <input
+                        type="text"
+                        value={editForm.name}
+                        onChange={e => setEditForm({ ...editForm, name: e.target.value })}
+                        className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 font-medium"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-semibold text-slate-700 mb-1">Phone Number *</label>
+                      <input
+                        type="text"
+                        value={editForm.phoneNumber}
+                        onChange={e => setEditForm({ ...editForm, phoneNumber: e.target.value })}
+                        className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 font-medium"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-semibold text-slate-700 mb-1">National ID Card (NIC) *</label>
+                      <input
+                        type="text"
+                        value={editForm.nic}
+                        onChange={e => setEditForm({ ...editForm, nic: e.target.value })}
+                        className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 font-medium"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <div className="flex justify-between items-center mb-1">
+                        <label className="block font-semibold text-slate-700">Date of Birth *</label>
+                        {editForm.dob && (
+                          <span className="text-xs text-blue-600 font-bold">
+                            Age: {calculateAge(editForm.dob)}
+                          </span>
+                        )}
+                      </div>
+                      <input
+                        type="date"
+                        value={editForm.dob}
+                        onChange={e => setEditForm({ ...editForm, dob: e.target.value })}
+                        className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 font-medium"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-semibold text-slate-700 mb-1">Gender *</label>
+                      <select
+                        value={editForm.gender}
+                        onChange={e => setEditForm({ ...editForm, gender: e.target.value })}
+                        className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 font-medium"
+                        required
+                      >
+                        <option value="">Select Gender</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block font-semibold text-slate-700 mb-1">Home Address *</label>
+                      <input
+                        type="text"
+                        value={editForm.homeAddress}
+                        onChange={e => setEditForm({ ...editForm, homeAddress: e.target.value })}
+                        className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 font-medium"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">Allergies</label>
+                    <textarea
+                      value={editForm.allergies}
+                      onChange={e => setEditForm({ ...editForm, allergies: e.target.value })}
+                      className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 font-medium h-20 resize-none"
+                      placeholder="List any drug or food allergies..."
+                    />
+                  </div>
+                  <div className="flex gap-3 pt-4 border-t">
+                    <button
+                      type="button"
+                      onClick={() => setIsEditingProfile(false)}
+                      className="border border-slate-200 px-5 py-2.5 rounded-xl text-slate-600 font-bold hover:bg-slate-50 transition cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={savingProfile}
+                      className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-2.5 rounded-xl transition cursor-pointer shadow-md shadow-blue-100"
+                    >
+                      {savingProfile ? "Saving..." : "Save Changes"}
+                    </button>
+                  </div>
+                </form>
+              )}
             </div>
           </div>
         )}
@@ -945,6 +1160,95 @@ export default function PatientDashboard() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* Medical Records Modal */}
+      {isMedicalRecordsOpen && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl w-full max-w-2xl p-8 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            {/* Close button */}
+            <button
+              onClick={() => setIsMedicalRecordsOpen(false)}
+              className="absolute top-6 right-6 p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-650 transition cursor-pointer"
+            >
+              <X size={20} />
+            </button>
+
+            <h2 className="text-2xl font-bold text-slate-900 mb-2">My Medical & Clinical Records</h2>
+            <p className="text-slate-500 text-sm mb-6 font-semibold">Historical list of dental check-in clinical notes, complaints, and completed treatments.</p>
+
+            {appointments.filter(appt => appt.complains || appt.onExamination || appt.treatmentPlan || appt.treatmentDone || appt.allergies).length === 0 ? (
+              <div className="text-center py-12 text-slate-400 font-medium text-sm border rounded-2xl bg-slate-50">
+                No clinical medical records found.
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {appointments
+                  .filter(appt => appt.complains || appt.onExamination || appt.treatmentPlan || appt.treatmentDone || appt.allergies)
+                  .map((appt) => {
+                    const formattedDate = new Date(appt.date).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    });
+                    return (
+                      <div key={appt._id} className="border border-slate-150 p-5 rounded-2xl bg-slate-50/50 hover:bg-slate-50 transition">
+                        <div className="flex justify-between items-center border-b border-slate-100 pb-3 mb-3">
+                          <div>
+                            <span className="text-xs text-blue-600 font-bold uppercase tracking-wider">{appt.treatment}</span>
+                            <span className="block text-slate-900 font-bold text-sm mt-0.5">{formattedDate} • {appt.time}</span>
+                          </div>
+                          <span className="text-xs font-bold text-slate-600 bg-slate-100 px-3 py-1 rounded-full">
+                            Dr. {appt.dentist?.fullName || "General Dentist"}
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+
+                          {appt.onExamination && (
+                            <div>
+                              <span className="font-bold text-slate-400 block uppercase tracking-wider text-[9px]">On Examination Findings</span>
+                              <p className="text-slate-700 mt-0.5 font-medium">{appt.onExamination}</p>
+                            </div>
+                          )}
+                          {appt.treatmentPlan && (
+                            <div>
+                              <span className="font-bold text-slate-400 block uppercase tracking-wider text-[9px]">Proposed Treatment Plan</span>
+                              <p className="text-slate-700 mt-0.5 font-medium">{appt.treatmentPlan}</p>
+                            </div>
+                          )}
+                          {appt.treatmentDone && (
+                            <div>
+                              <span className="font-bold text-slate-400 block uppercase tracking-wider text-[9px]">Treatment Done</span>
+                              <p className="text-slate-700 mt-0.5 font-medium">{appt.treatmentDone}</p>
+                            </div>
+                          )}
+                          {appt.allergies && (
+                            <div className="sm:col-span-2">
+                              <span className="font-bold text-slate-400 block uppercase tracking-wider text-[9px]">Allergies & Medical Warnings</span>
+                              <p className="text-amber-850 mt-0.5 font-semibold bg-amber-50 border border-amber-100/50 px-2.5 py-1 rounded-xl w-fit">{appt.allergies}</p>
+                            </div>
+                          )}
+                          {appt.notes && (
+                            <div className="sm:col-span-2 border-t border-slate-100 pt-2 mt-1">
+                              <span className="font-bold text-slate-400 block uppercase tracking-wider text-[9px]">Clinical Notes</span>
+                              <p className="text-slate-600 mt-0.5 font-medium italic">"{appt.notes}"</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            )}
+
+            <button
+              onClick={() => setIsMedicalRecordsOpen(false)}
+              className="w-full mt-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition cursor-pointer text-sm"
+            >
+              Close
+            </button>
           </div>
         </div>
       )}

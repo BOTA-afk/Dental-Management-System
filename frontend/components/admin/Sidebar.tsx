@@ -6,6 +6,8 @@ import { usePathname } from 'next/navigation';
 import { LogOut, Lock } from 'lucide-react';
 import ChangePasswordModal from '@/components/ChangePasswordModal';
 
+import Image from 'next/image';
+
 export default function Sidebar() {
   const pathname = usePathname();
   const [userRole, setUserRole] = useState<string>("system_admin");
@@ -36,7 +38,17 @@ export default function Sidebar() {
 
   return (
     <aside className="w-64 bg-white border-r border-slate-200 flex flex-col px-6 py-8 fixed h-screen">
-      <h1 className="text-3xl font-black text-blue-900 mb-10">Dentplus</h1>
+      <div className="mb-10 px-2 flex justify-start">
+        <Image 
+          src="/logo.png" 
+          alt="Dentplus Logo" 
+          width={160} 
+          height={40} 
+          priority
+          style={{ width: 'auto', height: 'auto' }}
+          className="object-contain"
+        />
+      </div>
 
       {/* Menu */}
       <nav className="flex-1 space-y-2">

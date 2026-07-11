@@ -109,6 +109,41 @@ export const getPatientProfile = async (req, res) => {
   }
 };
 
+export const updatePatientProfile = async (req, res) => {
+  try {
+    const { name, phoneNumber, nic, dob, gender, homeAddress, allergies } = req.body;
+    const patientId = req.user.id;
+
+    if (phoneNumber) {
+      const existingPatientPhone = await Patient.findOne({ phoneNumber, _id: { $ne: patientId } });
+      if (existingPatientPhone) {
+        return res.status(400).json({ message: "Phone number is already in use by another account." });
+      }
+    }
+
+    if (nic) {
+      const existingPatientNIC = await Patient.findOne({ nic, _id: { $ne: patientId } });
+      if (existingPatientNIC) {
+        return res.status(400).json({ message: "NIC is already in use by another account." });
+      }
+    }
+
+    const updatedPatient = await Patient.findByIdAndUpdate(
+      patientId,
+      { name, phoneNumber, nic, dob, gender, homeAddress, allergies },
+      { new: true }
+    ).select("-password");
+
+    if (!updatedPatient) {
+      return res.status(404).json({ message: "Patient profile not found." });
+    }
+
+    res.json(updatedPatient);
+  } catch (error) {
+    res.status(500).json({ message: "Server error updating profile: " + error.message });
+  }
+};
+
 export const forgotPassword = async (req, res) => {
   const { email } = req.body;
 

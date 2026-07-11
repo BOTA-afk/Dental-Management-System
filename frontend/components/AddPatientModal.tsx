@@ -1,14 +1,15 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface AddPatientModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  patient?: any;
 }
 
-export default function AddPatientModal({ isOpen, onClose, onSuccess }: AddPatientModalProps) {
+export default function AddPatientModal({ isOpen, onClose, onSuccess, patient }: AddPatientModalProps) {
   const [name, setName] = useState('');
   const [dob, setDob] = useState('');
   const [gender, setGender] = useState('');
@@ -16,7 +17,42 @@ export default function AddPatientModal({ isOpen, onClose, onSuccess }: AddPatie
   const [email, setEmail] = useState('');
   const [nic, setNic] = useState('');
   const [homeAddress, setHomeAddress] = useState('');
+  const [allergies, setAllergies] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (patient) {
+      setName(patient.name || '');
+      setDob(patient.dob ? new Date(patient.dob).toISOString().split('T')[0] : '');
+      setGender(patient.gender || '');
+      setPhoneNumber(patient.phoneNumber || '');
+      setEmail(patient.email || '');
+      setNic(patient.nic || '');
+      setHomeAddress(patient.homeAddress || '');
+      setAllergies(patient.allergies || '');
+    } else {
+      setName('');
+      setDob('');
+      setGender('');
+      setPhoneNumber('');
+      setEmail('');
+      setNic('');
+      setHomeAddress('');
+      setAllergies('');
+    }
+  }, [isOpen, patient]);
+
+  const calculateAge = (dobString: string) => {
+    if (!dobString) return "";
+    const today = new Date();
+    const birthDate = new Date(dobString);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age >= 0 ? `${age} years` : "";
+  };
 
   if (!isOpen) return null;
 
@@ -30,8 +66,13 @@ export default function AddPatientModal({ isOpen, onClose, onSuccess }: AddPatie
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/admin/patients`, {
-        method: 'POST',
+      const method = patient ? 'PUT' : 'POST';
+      const url = patient 
+        ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/admin/patients/${patient._id}`
+        : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/admin/patients`;
+
+      const res = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
@@ -43,29 +84,33 @@ export default function AddPatientModal({ isOpen, onClose, onSuccess }: AddPatie
           dob,
           gender,
           nic,
-          homeAddress
+          homeAddress,
+          allergies
         })
       });
 
       if (res.ok) {
-        alert("Patient registered successfully! A welcome email with credentials has been sent.");
-        setName('');
-        setDob('');
-        setGender('');
-        setPhoneNumber('');
-        setEmail('');
-        setNic('');
-        setHomeAddress('');
+        alert(patient ? "Patient details updated successfully!" : "Patient registered successfully! A welcome email with credentials has been sent.");
+        if (!patient) {
+          setName('');
+          setDob('');
+          setGender('');
+          setPhoneNumber('');
+          setEmail('');
+          setNic('');
+          setHomeAddress('');
+          setAllergies('');
+        }
         
         onClose();
         if (onSuccess) onSuccess();
       } else {
         const data = await res.json();
-        alert(data.message || "Failed to create patient record.");
+        alert(data.message || "Failed to save patient record.");
       }
     } catch (err) {
       console.error(err);
-      alert("Network error creating patient.");
+      alert("Network error saving patient.");
     } finally {
       setLoading(false);
     }
@@ -74,8 +119,10 @@ export default function AddPatientModal({ isOpen, onClose, onSuccess }: AddPatie
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-white w-[500px] max-h-[90vh] overflow-y-auto p-8 rounded-3xl shadow-2xl border border-slate-100">
-        <h2 className="text-2xl font-bold mb-1 text-slate-800">Add New Patient</h2>
-        <p className="text-slate-500 mb-6 text-sm">Create a new patient record and auto-generate credentials.</p>
+        <h2 className="text-2xl font-bold mb-1 text-slate-800">{patient ? "Edit Patient Details" : "Add New Patient"}</h2>
+        <p className="text-slate-500 mb-6 text-sm">
+          {patient ? "Modify patient details below." : "Create a new patient record and auto-generate credentials."}
+        </p>
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -102,7 +149,14 @@ export default function AddPatientModal({ isOpen, onClose, onSuccess }: AddPatie
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1">Date of Birth *</label>
+              <div className="flex justify-between items-center mb-1">
+                <label className="block text-sm font-semibold text-slate-700">Date of Birth *</label>
+                {dob && (
+                  <span className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full font-bold">
+                    Age: {calculateAge(dob)}
+                  </span>
+                )}
+              </div>
               <input 
                 type="date"
                 value={dob}
@@ -158,6 +212,17 @@ export default function AddPatientModal({ isOpen, onClose, onSuccess }: AddPatie
             />
           </div>
 
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-1">Allergies</label>
+            <input 
+              type="text"
+              placeholder="Enter drug or food allergies"
+              value={allergies}
+              onChange={(e) => setAllergies(e.target.value)}
+              className="w-full p-3.5 bg-slate-50 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 font-medium"
+            />
+          </div>
+
           <div className="flex gap-3 pt-4">
             <button 
               type="button"
@@ -171,7 +236,7 @@ export default function AddPatientModal({ isOpen, onClose, onSuccess }: AddPatie
               disabled={loading}
               className="flex-1 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold transition shadow-lg shadow-blue-100 disabled:opacity-50 cursor-pointer"
             >
-              {loading ? "Registering..." : "Save Patient"}
+              {loading ? "Saving..." : patient ? "Save Changes" : "Save Patient"}
             </button>
           </div>
         </form>

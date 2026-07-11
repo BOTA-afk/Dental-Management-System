@@ -17,6 +17,7 @@ interface Patient {
   gender: string;
   nic: string;
   homeAddress?: string;
+  allergies?: string;
   createdAt: string;
 }
 
@@ -28,6 +29,7 @@ export default function PatientsPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const [selectedPatientForEdit, setSelectedPatientForEdit] = useState<Patient | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isCheckInOpen, setIsCheckInOpen] = useState(false);
 
@@ -157,7 +159,7 @@ export default function PatientsPage() {
               placeholder="Search by Name, Email, Phone, or NIC..." 
             />
           </div>
-          <button onClick={() => setIsModalOpen(true)} className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl flex items-center gap-2 font-semibold shadow-md shadow-blue-100 transition cursor-pointer">
+          <button onClick={() => { setSelectedPatientForEdit(null); setIsModalOpen(true); }} className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl flex items-center gap-2 font-semibold shadow-md shadow-blue-100 transition cursor-pointer">
             <Plus size={20} /> Add New Patients
           </button>
         </div>
@@ -219,7 +221,15 @@ export default function PatientsPage() {
                         >
                           Check-In
                         </button>
-                        <button className="text-slate-500 hover:text-slate-700 text-sm font-semibold cursor-pointer">Edit</button>
+                        <button 
+                          onClick={() => {
+                            setSelectedPatientForEdit(p);
+                            setIsModalOpen(true);
+                          }}
+                          className="text-slate-500 hover:text-slate-700 text-sm font-semibold cursor-pointer"
+                        >
+                          Edit
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -230,7 +240,11 @@ export default function PatientsPage() {
         </div>
         <AddPatientModal 
           isOpen={isModalOpen} 
-          onClose={() => setIsModalOpen(false)} 
+          onClose={() => {
+            setIsModalOpen(false);
+            setSelectedPatientForEdit(null);
+          }} 
+          patient={selectedPatientForEdit}
           onSuccess={fetchPatients}
         />
         <PatientDetailsModal

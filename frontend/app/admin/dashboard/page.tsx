@@ -73,7 +73,7 @@ export default function Dashboard() {
   });
 
   const scheduledToday = todayAppointments.length;
-  const checkIn = todayAppointments.filter(appt => appt.status === 'Confirmed' || appt.status === 'In Progress').length;
+  const checkIn = todayAppointments.filter(appt => appt.status === 'Confirmed' || appt.status === 'In Progress' || appt.status === 'Arrived').length;
   const pendingTasks = appointments.filter(appt => appt.status === 'Pending').length;
 
   const stats = [

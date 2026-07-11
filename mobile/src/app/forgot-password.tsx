@@ -191,7 +191,7 @@ export default function ForgotPasswordScreen() {
 
             {message ? (
               <View style={styles.successContainer}>
-                <Ionicons name="checkmark-circle" size={20} color="#0D9488" />
+                <Ionicons name="checkmark-circle" size={20} color="#2563eb" />
                 <Text style={styles.successText}>{message}</Text>
               </View>
             ) : null}
@@ -367,7 +367,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   stepActive: {
-    backgroundColor: '#0D9488',
+    backgroundColor: '#2563eb',
   },
   stepNumber: {
     fontSize: 14,
@@ -384,7 +384,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 10,
   },
   stepLineActive: {
-    backgroundColor: '#0D9488',
+    backgroundColor: '#2563eb',
   },
   formCard: {
     backgroundColor: '#FFFFFF',
@@ -416,7 +416,7 @@ const styles = StyleSheet.create({
   successContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#E6F4F1',
+    backgroundColor: '#EFF6FF',
     borderWidth: 1,
     borderColor: '#99F6E4',
     borderRadius: 12,
@@ -463,12 +463,12 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   button: {
-    backgroundColor: '#0D9488',
+    backgroundColor: '#2563eb',
     borderRadius: 14,
     height: 56,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#0D9488',
+    shadowColor: '#2563eb',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.25,
     shadowRadius: 10,
