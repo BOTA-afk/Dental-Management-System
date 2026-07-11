@@ -20,7 +20,8 @@ import {
   FileHeart,
   CreditCard,
   MessageSquare,
-  FileText
+  FileText,
+  Bell
 } from "lucide-react";
 
 interface UserProfile {
@@ -80,6 +81,8 @@ export default function DentistDashboard() {
   const [filterDate, setFilterDate] = useState<string>(new Date().toISOString().substring(0, 10));
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
   const [isPatientDetailsOpen, setIsPatientDetailsOpen] = useState<boolean>(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isRescheduleOpen, setIsRescheduleOpen] = useState(false);
   const [isNewAppointmentOpen, setIsNewAppointmentOpen] = useState(false);
 
@@ -220,6 +223,40 @@ export default function DentistDashboard() {
     }
   };
 
+  const fetchNotifications = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/admin/dentist/notifications`,
+        {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }
+      );
+      if (res.ok) {
+        const data = await res.json();
+        setNotifications(data);
+      }
+    } catch (err) {
+      console.error("Error fetching dentist notifications:", err);
+    }
+  };
+
+  const markNotificationsAsRead = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/admin/dentist/notifications/read`,
+        {
+          method: 'PUT',
+          headers: { 'Authorization': `Bearer ${token}` }
+        }
+      );
+      fetchNotifications();
+    } catch (err) {
+      console.error("Error marking dentist notifications as read:", err);
+    }
+  };
+
   const fetchData = async (dentistId: string) => {
     try {
       const token = localStorage.getItem("token");
@@ -240,6 +277,9 @@ export default function DentistDashboard() {
         setPatients(data);
         setFilteredPatients(data);
       }
+
+      // 3. Fetch notifications
+      fetchNotifications();
     } catch (error) {
       console.error("Error loading dentist portal data:", error);
     }
@@ -421,6 +461,53 @@ export default function DentistDashboard() {
           </div>
 
           <div className="flex items-center gap-4">
+            {/* Notification Bell */}
+            <div className="relative">
+              <button 
+                onClick={() => {
+                  setIsNotifOpen(!isNotifOpen);
+                  if (!isNotifOpen) {
+                    markNotificationsAsRead();
+                  }
+                }}
+                className="p-2.5 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition cursor-pointer relative"
+              >
+                <Bell size={20} />
+                {notifications.filter(n => !n.read).length > 0 && (
+                  <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full"></span>
+                )}
+              </button>
+
+              {isNotifOpen && (
+                <div className="absolute right-0 mt-2 w-85 bg-white rounded-2xl shadow-xl border border-slate-100 p-4 z-50 animate-fade-in text-left">
+                  <div className="flex justify-between items-center border-b pb-2 mb-3">
+                    <h4 className="font-bold text-slate-800 text-sm">Notifications</h4>
+                    <button 
+                      onClick={() => setIsNotifOpen(false)}
+                      className="text-xs text-blue-600 font-bold hover:underline cursor-pointer"
+                    >
+                      Close
+                    </button>
+                  </div>
+                  <div className="space-y-3 max-h-60 overflow-y-auto">
+                    {notifications.length === 0 ? (
+                      <p className="text-xs text-slate-400 text-center py-4 font-medium">No notifications yet.</p>
+                    ) : (
+                      notifications.map(notif => (
+                        <div key={notif._id} className={`p-3 rounded-xl border text-xs leading-relaxed ${notif.read ? 'bg-white border-slate-100 text-slate-600' : 'bg-blue-50/50 border-blue-100 text-slate-800 font-medium'}`}>
+                          <p className="font-bold text-slate-900 mb-0.5">{notif.title}</p>
+                          <p>{notif.message}</p>
+                          <span className="text-[10px] text-slate-400 mt-1 block">
+                            {new Date(notif.createdAt).toLocaleDateString()} at {new Date(notif.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
             <div className="relative">
               <Search
                 size={18}

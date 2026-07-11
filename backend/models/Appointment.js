@@ -31,6 +31,26 @@ const appointmentSchema = new mongoose.Schema({
   notes: {
     type: String,
     default: ''
+  },
+  allergies: {
+    type: String,
+    default: ''
+  },
+  complains: {
+    type: String,
+    default: ''
+  },
+  onExamination: {
+    type: String,
+    default: ''
+  },
+  treatmentPlan: {
+    type: String,
+    default: ''
+  },
+  treatmentDone: {
+    type: String,
+    default: ''
   }
 }, { timestamps: true });
 

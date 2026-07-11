@@ -276,8 +276,17 @@ export const createAppointment = async (req, res) => {
         message: `Your appointment for ${treatment} with Dr. ${populatedAppt.dentist?.fullName || 'N/A'} has been successfully booked.`,
         type: 'booking'
       });
+
+      if (dentist) {
+        await Notification.create({
+          dentist: dentist,
+          title: "New Appointment Assigned",
+          message: `A new appointment for ${treatment} has been booked by patient ${populatedAppt.patient?.name || 'N/A'} on ${date} at ${time}.`,
+          type: "booking"
+        });
+      }
     } catch (notifErr) {
-      console.error("Failed to create booking notification:", notifErr);
+      console.error("Failed to create booking notifications:", notifErr);
     }
 
     res.status(201).json({ message: "Appointment booked successfully", appointment: populatedAppt });
@@ -293,7 +302,8 @@ export const cancelAppointment = async (req, res) => {
       { _id: id, patient: req.user.id },
       { status: 'Cancelled' },
       { new: true }
-    ).populate("dentist", "fullName email phoneNumber");
+    ).populate("dentist", "fullName email phoneNumber")
+     .populate("patient", "name email phoneNumber");
 
     if (!appointment) {
       return res.status(404).json({ message: "Appointment not found or not authorized" });
@@ -307,8 +317,17 @@ export const cancelAppointment = async (req, res) => {
         message: `Your appointment for ${appointment.treatment} with Dr. ${appointment.dentist?.fullName || 'N/A'} has been cancelled.`,
         type: 'cancel'
       });
+
+      if (appointment.dentist) {
+        await Notification.create({
+          dentist: appointment.dentist._id,
+          title: "Appointment Cancelled by Patient",
+          message: `Appointment for ${appointment.treatment} with patient ${appointment.patient?.name || 'N/A'} has been cancelled by the patient.`,
+          type: "cancel"
+        });
+      }
     } catch (notifErr) {
-      console.error("Failed to create cancellation notification:", notifErr);
+      console.error("Failed to create cancellation notifications:", notifErr);
     }
 
     res.json({ message: "Appointment cancelled successfully", appointment });

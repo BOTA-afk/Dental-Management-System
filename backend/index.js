@@ -6,6 +6,7 @@ import adminRoutes from "./routes/adminRoutes.js";
 import patientRoutes from "./routes/patientRoutes.js";
 import path from "path";
 import { fileURLToPath } from "url";
+import { getTokensFromCode } from "./utils/googleCalendarService.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -21,6 +22,36 @@ app.use(express.json());
 // Test route
 app.get("/", (req, res) => {
   res.send("API is running...");
+});
+
+// Google OAuth callback endpoint
+app.get("/oauth2callback", async (req, res) => {
+  const { code } = req.query;
+  if (!code) {
+    return res.status(400).send("No authorization code provided.");
+  }
+
+  try {
+    const tokens = await getTokensFromCode(code);
+    console.log("\n=========================================");
+    console.log("🔑 [GOOGLE OAUTH REFRESH TOKEN GENERATED]:");
+    console.log(tokens.refresh_token);
+    console.log("=========================================\n");
+
+    res.send(`
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 40px auto; padding: 30px; border: 1px solid #e2e8f0; border-radius: 16px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);">
+        <h2 style="color: #0ea5e9; font-weight: bold;">Google OAuth Successful!</h2>
+        <p>Google OAuth flow completed successfully. Please copy the refresh token below and add it to your <strong>backend/.env</strong> file as <strong>GOOGLE_REFRESH_TOKEN</strong>:</p>
+        <div style="background-color: #f8fafc; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 14px; word-break: break-all; border: 1px solid #e2e8f0; margin: 20px 0; font-weight: bold; color: #0f172a;">
+          ${tokens.refresh_token || "Already Authorized (No new refresh token generated. If you need to regenerate it, remove the app permissions in your Google Account Security settings and re-authenticate)"}
+        </div>
+        <p style="color: #64748b; font-size: 12px;">Then, restart your backend server to apply the environment changes.</p>
+      </div>
+    `);
+  } catch (error) {
+    console.error("OAuth token exchange error:", error);
+    res.status(500).send("Error exchanging authorization code for tokens: " + error.message);
+  }
 });
 
 

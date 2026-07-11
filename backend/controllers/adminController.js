@@ -10,6 +10,7 @@ import { generateAppointmentReceiptPdf, generateBillingReceiptPdf } from '../uti
 import { sendAppointmentConfirmationEmail, sendPatientWelcomeEmail, sendBillingReceiptEmail, sendTempPasswordEmail } from '../utils/emailService.js';
 import Notification from '../models/Notification.js';
 import Billing from '../models/Billing.js';
+import { addToGoogleCalendar } from '../utils/googleCalendarService.js';
 
 
 export const login = async (req, res) => {
@@ -204,8 +205,33 @@ export const createAppointment = async (req, res) => {
         message: `An appointment for ${treatment} with Dr. ${populatedAppt.dentist?.fullName || 'N/A'} has been scheduled for you.`,
         type: 'booking'
       });
+
+      if (dentistId) {
+        await Notification.create({
+          dentist: dentistId,
+          title: "New Appointment Assigned",
+          message: `A new appointment for ${treatment} with patient ${populatedAppt.patient?.name || 'N/A'} has been booked by administration on ${new Date(date).toLocaleDateString()} at ${time}.`,
+          type: 'booking'
+        });
+      }
+
+      // Check if confirmed directly on create
+      if (status === 'Confirmed' || populatedAppt.status === 'Confirmed') {
+        try {
+          await addToGoogleCalendar({
+            dentistEmail: populatedAppt.dentist?.email,
+            dentistName: populatedAppt.dentist?.fullName,
+            patientName: populatedAppt.patient?.name,
+            treatment: populatedAppt.treatment,
+            date: populatedAppt.date,
+            time: populatedAppt.time
+          });
+        } catch (calErr) {
+          console.error("Failed to add to Google Calendar on create:", calErr);
+        }
+      }
     } catch (notifErr) {
-      console.error("Failed to create admin booking notification:", notifErr);
+      console.error("Failed to create admin booking notifications:", notifErr);
     }
 
     res.status(201).json({ message: "Appointment created successfully", appointment: populatedAppt });
@@ -310,6 +336,43 @@ export const updateAppointment = async (req, res) => {
         message: `Your appointment for ${appointment.treatment} with Dr. ${appointment.dentist?.fullName || 'N/A'} has been rescheduled to ${new Date(appointment.date).toLocaleDateString()} at ${appointment.time}.`,
         type: 'reschedule'
       });
+
+      // Notify Dentist
+      await Notification.create({
+        dentist: appointment.dentist?._id,
+        title: "Appointment Rescheduled",
+        message: `Your appointment for ${appointment.treatment} with patient ${appointment.patient?.name || 'N/A'} has been rescheduled to ${new Date(appointment.date).toLocaleDateString()} at ${appointment.time}.`,
+        type: 'reschedule'
+      });
+    }
+
+    if (isCancelled) {
+      // Notify Dentist
+      await Notification.create({
+        dentist: appointment.dentist?._id,
+        title: "Appointment Cancelled",
+        message: `Your appointment for ${appointment.treatment} with patient ${appointment.patient?.name || 'N/A'} has been cancelled.`,
+        type: 'cancel'
+      });
+    }
+
+    // Google Calendar Sync check
+    const isConfirmed = status === 'Confirmed' && originalAppt.status !== 'Confirmed';
+    const shouldSyncCalendar = isConfirmed || (isRescheduled && appointment.status === 'Confirmed');
+
+    if (shouldSyncCalendar) {
+      try {
+        await addToGoogleCalendar({
+          dentistEmail: appointment.dentist?.email,
+          dentistName: appointment.dentist?.fullName,
+          patientName: appointment.patient?.name,
+          treatment: appointment.treatment,
+          date: appointment.date,
+          time: appointment.time
+        });
+      } catch (calErr) {
+        console.error("Failed to sync Google Calendar event on update:", calErr);
+      }
     }
 
     res.json({ message: "Appointment updated successfully", appointment });
@@ -615,5 +678,137 @@ export const updatePassword = async (req, res) => {
     res.json({ message: "Password updated successfully." });
   } catch (error) {
     res.status(500).json({ message: "Server error updating password", error: error.message });
+  }
+};
+
+export const getDentistNotifications = async (req, res) => {
+  try {
+    const notifications = await Notification.find({ dentist: req.user.id }).sort({ createdAt: -1 });
+    res.json(notifications);
+  } catch (error) {
+    res.status(500).json({ message: "Server error fetching dentist notifications", error: error.message });
+  }
+};
+
+export const markDentistNotificationsAsRead = async (req, res) => {
+  try {
+    await Notification.updateMany({ dentist: req.user.id }, { read: true });
+    res.json({ message: "Notifications marked as read" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error updating dentist notifications", error: error.message });
+  }
+};
+
+export const getLatestClinicalDetails = async (req, res) => {
+  const { patientId } = req.params;
+  try {
+    // Find the latest appointment with any clinical data for this patient
+    const latestAppt = await Appointment.findOne({
+      patient: patientId,
+      $or: [
+        { allergies: { $ne: '' } },
+        { complains: { $ne: '' } },
+        { onExamination: { $ne: '' } },
+        { treatmentPlan: { $ne: '' } },
+        { treatmentDone: { $ne: '' } }
+      ]
+    }).sort({ date: -1, createdAt: -1 });
+
+    if (latestAppt) {
+      res.json({
+        allergies: latestAppt.allergies || '',
+        complains: latestAppt.complains || '',
+        onExamination: latestAppt.onExamination || '',
+        treatmentPlan: latestAppt.treatmentPlan || '',
+        treatmentDone: latestAppt.treatmentDone || ''
+      });
+    } else {
+      res.json({
+        allergies: '',
+        complains: '',
+        onExamination: '',
+        treatmentPlan: '',
+        treatmentDone: ''
+      });
+    }
+  } catch (error) {
+    res.status(500).json({ message: "Server error fetching latest clinical details", error: error.message });
+  }
+};
+
+export const checkInPatient = async (req, res) => {
+  const { patientId } = req.params;
+  const { allergies, complains, onExamination, treatmentPlan, treatmentDone } = req.body;
+
+  try {
+    const today = new Date();
+    const startOfDay = new Date(today);
+    startOfDay.setUTCHours(0, 0, 0, 0);
+    const endOfDay = new Date(today);
+    endOfDay.setUTCHours(23, 59, 59, 999);
+
+    // Look for active appointments today
+    let appt = await Appointment.findOne({
+      patient: patientId,
+      date: { $gte: startOfDay, $lte: endOfDay },
+      status: { $nin: ['Cancelled', 'Completed'] }
+    });
+
+    if (!appt) {
+      // Look for any upcoming confirmed or pending appointment
+      appt = await Appointment.findOne({
+        patient: patientId,
+        status: { $in: ['Pending', 'Confirmed'] }
+      }).sort({ date: 1 });
+    }
+
+    if (!appt) {
+      // Create quick walk-in appointment if none exists
+      const dentist = await User.findOne({ role: 'dentist' });
+      if (!dentist) {
+        return res.status(400).json({ message: "No dentist found in the system to assign walk-in check-in." });
+      }
+
+      appt = await Appointment.create({
+        patient: patientId,
+        dentist: dentist._id,
+        treatment: "General Consultation (Walk-in)",
+        date: startOfDay,
+        time: "09:00 AM",
+        status: 'Confirmed'
+      });
+    }
+
+    // Save details on this appointment
+    appt.allergies = allergies || '';
+    appt.complains = complains || '';
+    appt.onExamination = onExamination || '';
+    appt.treatmentPlan = treatmentPlan || '';
+    appt.treatmentDone = treatmentDone || '';
+    appt.status = 'Confirmed'; // Mark confirmed/active on check-in
+
+    await appt.save();
+    
+    // Trigger Google Calendar if confirmed
+    try {
+      const populatedAppt = await Appointment.findById(appt._id)
+        .populate("patient", "name email phoneNumber")
+        .populate("dentist", "fullName email phoneNumber");
+
+      await addToGoogleCalendar({
+        dentistEmail: populatedAppt.dentist?.email,
+        dentistName: populatedAppt.dentist?.fullName,
+        patientName: populatedAppt.patient?.name,
+        treatment: populatedAppt.treatment,
+        date: populatedAppt.date,
+        time: populatedAppt.time
+      });
+    } catch (calErr) {
+      console.error("Google Calendar trigger failed on check-in:", calErr);
+    }
+
+    res.json({ message: "Patient checked in successfully!", appointment: appt });
+  } catch (error) {
+    res.status(500).json({ message: "Server error checking in patient", error: error.message });
   }
 };

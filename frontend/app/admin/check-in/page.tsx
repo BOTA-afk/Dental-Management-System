@@ -6,6 +6,7 @@ import { Search, Plus } from 'lucide-react';
 import AddPatientModal from '@/components/AddPatientModal';
 import Sidebar from '@/components/admin/Sidebar';
 import PatientDetailsModal from '@/components/PatientDetailsModal';
+import CheckInModal from '@/components/CheckInModal';
 
 interface Patient {
   _id: string;
@@ -28,6 +29,7 @@ export default function PatientsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [isCheckInOpen, setIsCheckInOpen] = useState(false);
 
   const fetchPatients = async () => {
     try {
@@ -198,7 +200,7 @@ export default function PatientsPage() {
                           Active
                         </span>
                       </td>
-                       <td className="p-4 flex gap-3">
+                       <td className="p-4 flex gap-3 flex-wrap">
                         <button 
                           onClick={() => {
                             setSelectedPatient(p);
@@ -207,6 +209,15 @@ export default function PatientsPage() {
                           className="text-blue-600 hover:text-blue-700 text-sm font-semibold cursor-pointer"
                         >
                           View
+                        </button>
+                        <button 
+                          onClick={() => {
+                            setSelectedPatient(p);
+                            setIsCheckInOpen(true);
+                          }}
+                          className="text-emerald-600 hover:text-emerald-700 text-sm font-semibold cursor-pointer"
+                        >
+                          Check-In
                         </button>
                         <button className="text-slate-500 hover:text-slate-700 text-sm font-semibold cursor-pointer">Edit</button>
                       </td>
@@ -229,6 +240,15 @@ export default function PatientsPage() {
             setSelectedPatient(null);
           }}
           patient={selectedPatient}
+        />
+        <CheckInModal
+          isOpen={isCheckInOpen}
+          onClose={() => {
+            setIsCheckInOpen(false);
+            setSelectedPatient(null);
+          }}
+          patient={selectedPatient}
+          onSuccess={fetchPatients}
         />
       </main>
     </div>

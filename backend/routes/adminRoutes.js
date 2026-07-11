@@ -16,9 +16,14 @@ import {
   getBillingSummary,
   createAdminCheckoutSession,
   resetStaffPassword,
-  updatePassword
+  updatePassword,
+  getDentistNotifications,
+  markDentistNotificationsAsRead,
+  getLatestClinicalDetails,
+  checkInPatient
 } from "../controllers/adminController.js";
 import { verifyToken, isAdmin, isStaff, isAdminOrAssistant } from '../middleware/authMiddleware.js';
+import { getAuthUrl } from '../utils/googleCalendarService.js';
 
 const router = express.Router();
 
@@ -28,6 +33,13 @@ router.post("/create-account", verifyToken, isAdminOrAssistant, createAccount);
 router.get('/staff', verifyToken, isAdminOrAssistant, getStaff);
 router.post('/reset-staff-password', verifyToken, isAdminOrAssistant, resetStaffPassword);
 router.post('/update-password', verifyToken, updatePassword);
+router.get('/dentist/notifications', verifyToken, isStaff, getDentistNotifications);
+router.put('/dentist/notifications/read', verifyToken, isStaff, markDentistNotificationsAsRead);
+router.get('/calendar/auth', (req, res) => {
+  res.redirect(getAuthUrl());
+});
+router.get('/patients/:patientId/latest-clinical-details', verifyToken, isStaff, getLatestClinicalDetails);
+router.post('/patients/:patientId/check-in', verifyToken, isStaff, checkInPatient);
 
 // Appointment & Patient management routes
 router.get('/patients', verifyToken, isStaff, getPatients);
