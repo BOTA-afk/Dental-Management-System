@@ -44,3 +44,15 @@ export const isStaff = (req, res, next) => {
     return res.status(403).json({ message: "Access denied. Staff only." });
   }
 };
+
+/**
+ * Middleware to restrict routes to admin or assistant.
+ * Call this AFTER verifyToken.
+ */
+export const isAdminOrAssistant = (req, res, next) => {
+  if (req.user && ['system_admin', 'assistant'].includes(req.user.role)) {
+    next();
+  } else {
+    return res.status(403).json({ message: "Access denied. Admin or assistant only." });
+  }
+};

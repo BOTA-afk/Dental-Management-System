@@ -72,8 +72,9 @@ export const sendOtpEmail = async (email, otp) => {
     console.log('\n=========================================');
     console.log(`🔑 [FALLBACK OTP] Code for patient ${email}:`);
     console.log(`👉 OTP: ${otp} 👈`);
+    console.log('Validity: Expires in 10 minutes (SMTP failed, using console fallback)');
     console.log('=========================================\n');
-    throw new Error('Failed to send verification email. Details: ' + error.message);
+    return { success: true, message: 'OTP logged to server console (SMTP failed).' };
   }
 };
 
@@ -368,5 +369,85 @@ export const sendBillingReceiptEmail = async (email, patientName, bill, pdfBuffe
   } catch (error) {
     console.error('❌ Error sending billing receipt email:', error);
     throw new Error('Failed to send billing receipt email. Details: ' + error.message);
+  }
+};
+
+export const sendTempPasswordEmail = async (email, name, tempPassword) => {
+  const emailUser = process.env.EMAIL_USER;
+  const emailPass = process.env.EMAIL_PASS;
+
+  if (!emailUser || !emailPass) {
+    console.log('\n=========================================');
+    console.log(`✉️ [DEVELOPMENT PASSWORD RESET] Temporary Credentials for ${name} (${email}):`);
+    console.log(`Username/Email: ${email}`);
+    console.log(`Temporary Password: ${tempPassword}`);
+    console.log('=========================================\n');
+    return { success: true, message: 'Temp password logged to server console (development mode).' };
+  }
+
+  try {
+    const cleanPass = emailPass.replace(/[\s\u00a0]/g, '');
+    let transportConfig = {
+      auth: {
+        user: emailUser,
+        pass: cleanPass,
+      },
+    };
+
+    if (process.env.EMAIL_HOST && process.env.EMAIL_HOST.toLowerCase().includes('gmail')) {
+      transportConfig.service = 'gmail';
+    } else {
+      transportConfig.host = process.env.EMAIL_HOST;
+      transportConfig.port = parseInt(process.env.EMAIL_PORT || '587');
+      transportConfig.secure = process.env.EMAIL_PORT === '465';
+      transportConfig.tls = {
+        rejectUnauthorized: false,
+      };
+    }
+
+    const transporter = nodemailer.createTransport(transportConfig);
+
+    const mailOptions = {
+      from: `"DentCare Clinic" <${emailUser}>`,
+      to: email,
+      subject: 'DentCare Staff - Temporary Password Reset',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;">
+          <h2 style="color: #0ea5e9; text-align: center;">Temporary Password Issued</h2>
+          <p>Dear ${name},</p>
+          <p>A temporary password has been generated for your staff account. You can log in using your email and the password below:</p>
+          
+          <div style="background-color: #f8fafc; padding: 15px; border-radius: 8px; margin: 20px 0;">
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <td style="padding: 6px 0; color: #64748b; font-weight: bold; width: 130px;">Login Email:</td>
+                <td style="padding: 6px 0; color: #0f172a; font-weight: bold;">${email}</td>
+              </tr>
+              <tr>
+                <td style="padding: 6px 0; color: #64748b; font-weight: bold;">Temporary Password:</td>
+                <td style="padding: 6px 0; color: #0f172a; font-weight: bold; font-family: monospace; font-size: 16px;">${tempPassword}</td>
+              </tr>
+            </table>
+          </div>
+
+          <p style="color: #ef4444; font-weight: bold;">Important: Please reset your password immediately after logging in.</p>
+          
+          <hr style="border: 0; border-top: 1px solid #e2e8f0; margin-top: 30px;"/>
+          <p style="font-size: 12px; color: #64748b; text-align: center;">This is an automated message from DentCare Dental Clinic.</p>
+        </div>
+      `
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`✉️ Temporary password email sent to ${email}: ${info.messageId}`);
+    return { success: true, message: 'Temp password email sent.' };
+  } catch (error) {
+    console.error('❌ Error sending temp password email:', error);
+    console.log('\n=========================================');
+    console.log(`🔑 [FALLBACK PASSWORD RESET] Credentials for ${name} (${email}):`);
+    console.log(`Username/Email: ${email}`);
+    console.log(`Temporary Password: ${tempPassword}`);
+    console.log('=========================================\n');
+    return { success: true, message: 'Temp password logged to server console (SMTP failed).' };
   }
 };

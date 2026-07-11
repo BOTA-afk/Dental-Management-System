@@ -11,7 +11,11 @@ import Stripe from "stripe";
 
 export const registerPatient = async (req, res) => {
   try {
-    const { name, email, password, nic, phoneNumber, dob, gender } = req.body;
+    const { name, email, password, nic, phoneNumber, dob, gender, homeAddress } = req.body;
+
+    if (!homeAddress) {
+      return res.status(400).json({ message: "Home address is required." });
+    }
 
     // 1. Check if patient already exists
     const existingPatient = await Patient.findOne({ email });
@@ -28,6 +32,7 @@ export const registerPatient = async (req, res) => {
       phoneNumber,
       dob,
       gender,
+      homeAddress,
     });
 
     await newPatient.save();
@@ -214,6 +219,24 @@ export const getAppointments = async (req, res) => {
 export const createAppointment = async (req, res) => {
   const { dentistId, treatment, date, time, notes } = req.body;
   try {
+    // Check if slot is already booked for this dentist on this date
+    const targetDate = new Date(date);
+    const startOfDay = new Date(targetDate);
+    startOfDay.setUTCHours(0, 0, 0, 0);
+    const endOfDay = new Date(targetDate);
+    endOfDay.setUTCHours(23, 59, 59, 999);
+
+    const existingAppointment = await Appointment.findOne({
+      dentist: dentistId,
+      date: { $gte: startOfDay, $lte: endOfDay },
+      time,
+      status: { $ne: 'Cancelled' }
+    });
+
+    if (existingAppointment) {
+      return res.status(400).json({ message: "This time slot is already booked for the selected doctor." });
+    }
+
     const appointment = new Appointment({
       patient: req.user.id,
       dentist: dentistId,
@@ -406,5 +429,32 @@ export const createCheckoutSession = async (req, res) => {
     res.json({ url: session.url });
   } catch (error) {
     res.status(500).json({ message: "Server error creating checkout session", error: error.message });
+  }
+};
+
+export const getBookedSlots = async (req, res) => {
+  const { dentistId, date } = req.query;
+
+  if (!dentistId || !date) {
+    return res.status(400).json({ message: "dentistId and date are required parameters." });
+  }
+
+  try {
+    const targetDate = new Date(date);
+    const startOfDay = new Date(targetDate);
+    startOfDay.setUTCHours(0, 0, 0, 0);
+    const endOfDay = new Date(targetDate);
+    endOfDay.setUTCHours(23, 59, 59, 999);
+
+    const appointments = await Appointment.find({
+      dentist: dentistId,
+      date: { $gte: startOfDay, $lte: endOfDay },
+      status: { $ne: 'Cancelled' }
+    }).select('time');
+
+    const bookedSlots = appointments.map(appt => appt.time);
+    res.json(bookedSlots);
+  } catch (error) {
+    res.status(500).json({ message: "Server error fetching booked slots", error: error.message });
   }
 };

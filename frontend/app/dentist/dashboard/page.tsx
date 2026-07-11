@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import ChangePasswordModal from "@/components/ChangePasswordModal";
+import PatientDetailsModal from "@/components/PatientDetailsModal";
 import { 
   LayoutDashboard, 
   Calendar, 
@@ -13,6 +15,7 @@ import {
   Activity,
   CheckCircle2,
   Clock,
+  Lock,
   ChevronRight,
   FileHeart,
   CreditCard,
@@ -60,6 +63,7 @@ export default function DentistDashboard() {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
 
   // Dynamic API state
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -73,6 +77,9 @@ export default function DentistDashboard() {
   // Modals state
   const [selectedAppt, setSelectedAppt] = useState<Appointment | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [filterDate, setFilterDate] = useState<string>(new Date().toISOString().substring(0, 10));
+  const [selectedPatient, setSelectedPatient] = useState<any>(null);
+  const [isPatientDetailsOpen, setIsPatientDetailsOpen] = useState<boolean>(false);
   const [isRescheduleOpen, setIsRescheduleOpen] = useState(false);
   const [isNewAppointmentOpen, setIsNewAppointmentOpen] = useState(false);
 
@@ -195,6 +202,24 @@ export default function DentistDashboard() {
     }
   };
 
+  const getLocalDateString = (dateInput: string | Date) => {
+    const d = new Date(dateInput);
+    const year = d.getUTCFullYear();
+    const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(d.getUTCDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const handleShowPatientDetails = (patientId: string) => {
+    const p = patients.find(pat => pat._id === patientId);
+    if (p) {
+      setSelectedPatient(p);
+      setIsPatientDetailsOpen(true);
+    } else {
+      alert("Patient details not found.");
+    }
+  };
+
   const fetchData = async (dentistId: string) => {
     try {
       const token = localStorage.getItem("token");
@@ -303,6 +328,11 @@ export default function DentistDashboard() {
     return dentistId === user?.id;
   });
 
+  const filteredDentistAppointments = dentistAppointments.filter(appt => {
+    if (!filterDate) return true;
+    return getLocalDateString(appt.date) === filterDate;
+  });
+
   const todayStr = new Date().toDateString();
   const todayAppointmentsList = dentistAppointments.filter(appt => {
     return new Date(appt.date).toDateString() === todayStr;
@@ -355,14 +385,28 @@ export default function DentistDashboard() {
           })}
         </nav>
 
+        {/* Update Password Button */}
+        <button
+          onClick={() => setIsChangePasswordOpen(true)}
+          className="mt-auto flex items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 font-semibold text-blue-700 transition hover:bg-blue-600 hover:text-white cursor-pointer"
+        >
+          <Lock size={18} />
+          Update Password
+        </button>
+
         {/* Logout Button */}
         <button
           onClick={handleLogout}
-          className="mt-8 flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 font-semibold text-red-600 transition hover:bg-red-600 hover:text-white"
+          className="mt-4 flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 font-semibold text-red-600 transition hover:bg-red-600 hover:text-white cursor-pointer"
         >
           <LogOut size={18} />
           Logout
         </button>
+
+        <ChangePasswordModal
+          isOpen={isChangePasswordOpen}
+          onClose={() => setIsChangePasswordOpen(false)}
+        />
       </aside>
 
       {/* Main Content Area */}
@@ -377,13 +421,6 @@ export default function DentistDashboard() {
           </div>
 
           <div className="flex items-center gap-4">
-            <button
-              onClick={() => setIsNewAppointmentOpen(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2.5 rounded-xl transition shadow-md flex items-center gap-2 cursor-pointer text-sm"
-            >
-              <Calendar size={16} /> New Appointment
-            </button>
-
             <div className="relative">
               <Search
                 size={18}
@@ -424,9 +461,9 @@ export default function DentistDashboard() {
             </section>
 
             {/* Core Section */}
-            <section className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+            <section className="space-y-8">
               {/* Daily Queue */}
-              <div className="xl:col-span-2 bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
+              <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
                 <div className="flex justify-between items-center mb-6">
                   <h3 className="text-xl font-bold text-slate-900">
                     {showOnlyToday ? "Today's Appointment Queue" : "All Assigned Appointments"}
@@ -519,33 +556,6 @@ export default function DentistDashboard() {
                   )}
                 </div>
               </div>
-
-              {/* Quick Actions & Notes */}
-              <div className="space-y-8">
-                {/* Dentist Tools */}
-                <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
-                  <h3 className="text-lg font-bold text-slate-900 mb-4">Quick Actions</h3>
-                  <div className="space-y-3">
-                    <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl transition text-sm flex items-center justify-center gap-2">
-                      <Stethoscope size={16} /> Start Dental Exam
-                    </button>
-                    <button className="w-full bg-white border hover:bg-slate-50 text-slate-700 font-bold py-3 px-4 rounded-xl transition text-sm flex items-center justify-center gap-2">
-                      <ClipboardList size={16} /> Write Prescription
-                    </button>
-                  </div>
-                </div>
-
-                {/* Treatment Notes Reminder */}
-                <div className="bg-blue-950 text-blue-100 rounded-3xl p-6 relative overflow-hidden">
-                  <div className="absolute right-0 bottom-0 opacity-10 transform translate-x-4 translate-y-4">
-                    <Stethoscope size={150} />
-                  </div>
-                  <h4 className="font-bold text-white text-lg mb-2">Did you know?</h4>
-                  <p className="text-sm leading-relaxed text-blue-200">
-                    Entering clinical and post-op care notes within 1 hour of treatment improves patient compliance by 40% when integrated with automatic SMS instructions.
-                  </p>
-                </div>
-              </div>
             </section>
           </>
         )}
@@ -636,7 +646,102 @@ export default function DentistDashboard() {
           </div>
         )}
 
-        {activeTab !== "dashboard" && activeTab !== "patients" && (
+        {activeTab === "appointments" && (
+          <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-8">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+              <div>
+                <h3 className="text-xl font-bold text-slate-900">Appointments Schedule</h3>
+                <p className="text-slate-500 text-xs mt-0.5">Filter and manage your assigned appointments.</p>
+              </div>
+
+              {/* Date Filter Picker */}
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-semibold text-slate-500">Select Date:</span>
+                <input
+                  type="date"
+                  value={filterDate}
+                  onChange={(e) => setFilterDate(e.target.value)}
+                  className="px-4 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-bold text-slate-700 bg-slate-50"
+                />
+                {filterDate && (
+                  <button
+                    onClick={() => setFilterDate('')}
+                    className="text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 px-3 py-2 rounded-xl transition cursor-pointer border border-red-100"
+                  >
+                    Clear Filter
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-100 text-slate-400 text-xs uppercase font-semibold">
+                    <th className="p-4 pl-0">Time</th>
+                    <th className="p-4">Date</th>
+                    <th className="p-4">Patient</th>
+                    <th className="p-4">Treatment</th>
+                    <th className="p-4">Status</th>
+                    <th className="p-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredDentistAppointments.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="text-center py-12 text-slate-400 font-medium text-sm">
+                        No appointments found for the selected date.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredDentistAppointments.map((appt) => {
+                      const pId = typeof appt.patient === 'string' ? appt.patient : appt.patient?._id;
+                      return (
+                        <tr key={appt._id} className="border-b border-slate-50 hover:bg-slate-50/50 transition">
+                          <td className="p-4 pl-0 font-bold text-blue-700 text-sm">{appt.time}</td>
+                          <td className="p-4 text-slate-600 text-sm">
+                            {new Date(appt.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                          </td>
+                          <td className="p-4">
+                            <span className="font-bold text-slate-900 block">{appt.patient?.name || 'Unknown'}</span>
+                            <span className="text-xs text-slate-400 block mt-0.5">{appt.patient?.email}</span>
+                          </td>
+                          <td className="p-4 text-slate-600 text-sm font-medium">{appt.treatment}</td>
+                          <td className="p-4 text-sm">
+                            <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
+                              appt.status === 'Completed' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
+                              appt.status === 'Scheduled' ? 'bg-blue-50 text-blue-700 border-blue-100' :
+                              appt.status === 'Cancelled' ? 'bg-rose-50 text-rose-700 border-rose-100' :
+                              'bg-slate-50 text-slate-600 border-slate-100'
+                            }`}>
+                              {appt.status}
+                            </span>
+                          </td>
+                          <td className="p-4 text-right space-x-2">
+                            <button
+                              onClick={() => {
+                                if (pId) {
+                                  handleShowPatientDetails(pId);
+                                } else {
+                                  alert("No patient details found.");
+                                }
+                              }}
+                              className="px-3 py-1.5 bg-slate-50 hover:bg-blue-50 border border-slate-200 text-slate-700 hover:text-blue-600 hover:border-blue-200 rounded-lg text-xs font-bold transition cursor-pointer"
+                            >
+                              Patient Details
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {activeTab !== "dashboard" && activeTab !== "patients" && activeTab !== "appointments" && (
           <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-12 text-center">
             <Stethoscope className="mx-auto text-slate-300 mb-4" size={48} />
             <h3 className="text-xl font-bold text-slate-900 mb-1">{activeTab.toUpperCase()} Section</h3>
@@ -866,6 +971,14 @@ export default function DentistDashboard() {
           </div>
         </div>
       )}
+      <PatientDetailsModal
+        isOpen={isPatientDetailsOpen}
+        onClose={() => {
+          setIsPatientDetailsOpen(false);
+          setSelectedPatient(null);
+        }}
+        patient={selectedPatient}
+      />
     </div>
   );
 }

@@ -26,6 +26,7 @@ export default function SignupScreen() {
 const [dob, setDob] = useState(new Date()); // Use Date object
   const [showDatePicker, setShowDatePicker] = useState(false);
 const [gender, setGender] = useState(''); // Added (Male, Female, Other)
+  const [homeAddress, setHomeAddress] = useState('');
   
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -36,8 +37,8 @@ const [gender, setGender] = useState(''); // Added (Male, Female, Other)
 
   const handleSignup = async () => {
     // Validate all fields including new requirements
-    if (!name || !email || !password || !phoneNumber || !nic || !dob || !gender) {
-      setError('Please fill in all fields, including NIC, DOB, and Gender.');
+    if (!name || !email || !password || !phoneNumber || !nic || !dob || !gender || !homeAddress) {
+      setError('Please fill in all fields, including Address, NIC, DOB, and Gender.');
       return;
     }
     if (password !== confirmPassword) {
@@ -49,7 +50,7 @@ const [gender, setGender] = useState(''); // Added (Male, Female, Other)
       setLoading(true);
       setError('');
       await registerPatient({ 
-        name, email, password, phoneNumber, nic, dob, gender 
+        name, email, password, phoneNumber, nic, dob, gender, homeAddress 
       });
     } catch (err: any) {
       setError(err.message || 'Registration failed.');
@@ -77,6 +78,7 @@ const [gender, setGender] = useState(''); // Added (Male, Female, Other)
           
           {/* New Fields */}
           <View style={styles.inputContainer}><Ionicons name="card-outline" size={20} color="#9CA3AF" style={styles.icon} /><TextInput style={styles.input} placeholder="NIC Number" value={nic} onChangeText={setNic} /></View>
+          <View style={styles.inputContainer}><Ionicons name="home-outline" size={20} color="#9CA3AF" style={styles.icon} /><TextInput style={styles.input} placeholder="Home Address" value={homeAddress} onChangeText={setHomeAddress} /></View>
           <View style={styles.inputContainer}>
             <Ionicons name="calendar-outline" size={20} color="#9CA3AF" style={styles.icon} />
             <TouchableOpacity onPress={() => setShowDatePicker(true)}>

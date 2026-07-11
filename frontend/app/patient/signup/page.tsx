@@ -18,6 +18,7 @@ export default function PatientSignupPage() {
     phoneNumber: "",
     email: "",
     nic: "",
+    homeAddress: "",
     password: "",
     confirmPassword: "",
   });
@@ -133,6 +134,11 @@ export default function PatientSignupPage() {
             <div>
               <label className="block mb-2 text-sm font-medium">NIC Number</label>
               <input type="text" required placeholder="200012345678" value={formData.nic} onChange={(e) => setFormData({ ...formData, nic: e.target.value })} className="w-full rounded-lg border px-4 py-3 focus:ring-2 focus:ring-blue-200" />
+            </div>
+
+            <div>
+              <label className="block mb-2 text-sm font-medium">Home Address</label>
+              <input type="text" required placeholder="123 Galle Road, Colombo" value={formData.homeAddress} onChange={(e) => setFormData({ ...formData, homeAddress: e.target.value })} className="w-full rounded-lg border px-4 py-3 focus:ring-2 focus:ring-blue-200" />
             </div>
 
             {/* Password Fields */}

@@ -14,16 +14,20 @@ import {
   createBill,
   updateBill,
   getBillingSummary,
-  createAdminCheckoutSession
+  createAdminCheckoutSession,
+  resetStaffPassword,
+  updatePassword
 } from "../controllers/adminController.js";
-import { verifyToken, isAdmin, isStaff } from '../middleware/authMiddleware.js';
+import { verifyToken, isAdmin, isStaff, isAdminOrAssistant } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
 router.post("/register", createAdmin);
 router.post("/login", login);
-router.post("/create-account", verifyToken, isAdmin, createAccount);
-router.get('/staff', verifyToken, isAdmin, getStaff);
+router.post("/create-account", verifyToken, isAdminOrAssistant, createAccount);
+router.get('/staff', verifyToken, isAdminOrAssistant, getStaff);
+router.post('/reset-staff-password', verifyToken, isAdminOrAssistant, resetStaffPassword);
+router.post('/update-password', verifyToken, updatePassword);
 
 // Appointment & Patient management routes
 router.get('/patients', verifyToken, isStaff, getPatients);

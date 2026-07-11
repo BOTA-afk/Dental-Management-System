@@ -7,7 +7,7 @@ import User from "../models/User.js";
 import Patient from '../models/Patient.js';
 import Appointment from '../models/Appointment.js';
 import { generateAppointmentReceiptPdf, generateBillingReceiptPdf } from '../utils/pdfGenerator.js';
-import { sendAppointmentConfirmationEmail, sendPatientWelcomeEmail, sendBillingReceiptEmail } from '../utils/emailService.js';
+import { sendAppointmentConfirmationEmail, sendPatientWelcomeEmail, sendBillingReceiptEmail, sendTempPasswordEmail } from '../utils/emailService.js';
 import Notification from '../models/Notification.js';
 import Billing from '../models/Billing.js';
 
@@ -123,7 +123,7 @@ export const getStaff = async (_req, res) => {
 
 export const getPatients = async (req, res) => {
   try {
-    const patients = await Patient.find({}).select("name email phoneNumber dob gender nic");
+    const patients = await Patient.find({}).select("name email phoneNumber dob gender nic homeAddress");
     res.json(patients);
   } catch (error) {
     res.status(500).json({ message: "Server error fetching patients", error: error.message });
@@ -131,8 +131,10 @@ export const getPatients = async (req, res) => {
 };
 
 export const getAppointments = async (req, res) => {
+  const { patientId } = req.query;
   try {
-    const appointments = await Appointment.find({})
+    const filter = patientId ? { patient: patientId } : {};
+    const appointments = await Appointment.find(filter)
       .populate("patient", "name email phoneNumber")
       .populate("dentist", "fullName email phoneNumber")
       .sort({ date: 1, time: 1 });
@@ -145,6 +147,24 @@ export const getAppointments = async (req, res) => {
 export const createAppointment = async (req, res) => {
   const { patientId, dentistId, treatment, date, time, notes, status } = req.body;
   try {
+    // Check if slot is already booked for this dentist on this date
+    const targetDate = new Date(date);
+    const startOfDay = new Date(targetDate);
+    startOfDay.setUTCHours(0, 0, 0, 0);
+    const endOfDay = new Date(targetDate);
+    endOfDay.setUTCHours(23, 59, 59, 999);
+
+    const existingAppointment = await Appointment.findOne({
+      dentist: dentistId,
+      date: { $gte: startOfDay, $lte: endOfDay },
+      time,
+      status: { $ne: 'Cancelled' }
+    });
+
+    if (existingAppointment) {
+      return res.status(400).json({ message: "This time slot is already booked for the selected doctor." });
+    }
+
     const appointment = new Appointment({
       patient: patientId,
       dentist: dentistId,
@@ -202,6 +222,32 @@ export const updateAppointment = async (req, res) => {
     const originalAppt = await Appointment.findById(id);
     if (!originalAppt) {
       return res.status(404).json({ message: "Appointment not found" });
+    }
+
+    // Check if slot is already booked for this dentist on this date (excluding current appointment)
+    const checkDentist = dentistId || originalAppt.dentist;
+    const checkDate = date || originalAppt.date;
+    const checkTime = time || originalAppt.time;
+    const checkStatus = status || originalAppt.status;
+
+    if (checkStatus !== 'Cancelled') {
+      const targetDate = new Date(checkDate);
+      const startOfDay = new Date(targetDate);
+      startOfDay.setUTCHours(0, 0, 0, 0);
+      const endOfDay = new Date(targetDate);
+      endOfDay.setUTCHours(23, 59, 59, 999);
+
+      const conflictingAppt = await Appointment.findOne({
+        _id: { $ne: id },
+        dentist: checkDentist,
+        date: { $gte: startOfDay, $lte: endOfDay },
+        time: checkTime,
+        status: { $ne: 'Cancelled' }
+      });
+
+      if (conflictingAppt) {
+        return res.status(400).json({ message: "This time slot is already booked for the selected doctor." });
+      }
     }
 
     const updateData = {};
@@ -286,7 +332,12 @@ export const deleteAppointment = async (req, res) => {
 };
 
 export const addPatient = async (req, res) => {
-  const { name, email, phoneNumber, dob, gender, nic } = req.body;
+  const { name, email, phoneNumber, dob, gender, nic, homeAddress } = req.body;
+
+  if (!homeAddress) {
+    return res.status(400).json({ message: "Home address is required." });
+  }
+
   try {
     const existingPatient = await Patient.findOne({ email });
     if (existingPatient) {
@@ -303,6 +354,7 @@ export const addPatient = async (req, res) => {
       dob,
       gender,
       nic,
+      homeAddress,
       password: tempPassword
     });
 
@@ -497,5 +549,71 @@ export const createAdminCheckoutSession = async (req, res) => {
     res.json({ url: session.url });
   } catch (error) {
     res.status(500).json({ message: "Server error creating checkout session", error: error.message });
+  }
+};
+
+export const resetStaffPassword = async (req, res) => {
+  const { staffId } = req.body;
+  if (!staffId) {
+    return res.status(400).json({ message: "staffId is required." });
+  }
+
+  try {
+    const staff = await User.findById(staffId);
+    if (!staff) {
+      return res.status(404).json({ message: "Staff member not found." });
+    }
+
+    // Generate temporary password
+    const tempPassword = crypto.randomBytes(4).toString('hex'); // 8 characters
+
+    // Update password
+    staff.password = tempPassword;
+    await staff.save();
+
+    // Send email with credentials
+    try {
+      await sendTempPasswordEmail(staff.email, staff.fullName, tempPassword);
+    } catch (emailErr) {
+      console.error("Temp password email failed to send:", emailErr);
+    }
+
+    res.json({ message: "Temporary password generated and emailed successfully." });
+  } catch (error) {
+    res.status(500).json({ message: "Server error resetting password", error: error.message });
+  }
+};
+
+export const updatePassword = async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ message: "Current password and new password are required." });
+  }
+
+  try {
+    let account;
+    if (req.user.role === 'system_admin') {
+      account = await Admin.findById(req.user.id);
+    } else {
+      account = await User.findById(req.user.id);
+    }
+
+    if (!account) {
+      return res.status(404).json({ message: "Account not found." });
+    }
+
+    // Verify current password
+    const isMatch = await bcrypt.compare(currentPassword, account.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Incorrect current password." });
+    }
+
+    // Update password
+    account.password = newPassword;
+    await account.save();
+
+    res.json({ message: "Password updated successfully." });
+  } catch (error) {
+    res.status(500).json({ message: "Server error updating password", error: error.message });
   }
 };

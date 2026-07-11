@@ -3,11 +3,13 @@
 import React, { useState, useEffect } from 'react';
 import { menuItems } from '@/lib/adminsildes';
 import { usePathname } from 'next/navigation';
-import { LogOut } from 'lucide-react';
+import { LogOut, Lock } from 'lucide-react';
+import ChangePasswordModal from '@/components/ChangePasswordModal';
 
 export default function Sidebar() {
   const pathname = usePathname();
   const [userRole, setUserRole] = useState<string>("system_admin");
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -59,14 +61,28 @@ export default function Sidebar() {
           })}
       </nav>
 
+      {/* Update Password Button */}
+      <button
+        onClick={() => setIsChangePasswordOpen(true)}
+        className="mt-auto flex items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 font-semibold text-blue-700 transition hover:bg-blue-600 hover:text-white cursor-pointer"
+      >
+        <Lock size={18} />
+        Update Password
+      </button>
+
       {/* Logout Button */}
       <button
         onClick={handleLogout}
-        className="mt-8 flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 font-semibold text-red-600 transition hover:bg-red-600 hover:text-white cursor-pointer"
+        className="mt-4 flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 font-semibold text-red-600 transition hover:bg-red-600 hover:text-white cursor-pointer"
       >
         <LogOut size={18} />
         Logout
       </button>
+
+      <ChangePasswordModal
+        isOpen={isChangePasswordOpen}
+        onClose={() => setIsChangePasswordOpen(false)}
+      />
     </aside>
   );
 }

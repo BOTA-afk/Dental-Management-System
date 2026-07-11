@@ -41,7 +41,6 @@ export default function AppointmentsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<'Upcoming' | 'Past'>('Upcoming');
 
-  // Booking states
   const [isBookingOpen, setIsBookingOpen] = useState(false);
   const [selectedDentist, setSelectedDentist] = useState('');
   const [selectedTreatment, setSelectedTreatment] = useState('');
@@ -49,6 +48,43 @@ export default function AppointmentsScreen() {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [time, setTime] = useState('');
   const [notes, setNotes] = useState('');
+  const [bookedSlots, setBookedSlots] = useState<string[]>([]);
+
+  // Clear time selection if dentist or date changes
+  useEffect(() => {
+    setTime('');
+  }, [selectedDentist, date]);
+
+  // Fetch booked slots
+  useEffect(() => {
+    if (!selectedDentist || !date || !token || !isBookingOpen) {
+      setBookedSlots([]);
+      return;
+    }
+
+    const fetchBookedSlots = async () => {
+      try {
+        const formattedDate = date.toISOString().split('T')[0];
+        const res = await fetch(
+          `${process.env.EXPO_PUBLIC_API_URL}/patient/appointments/booked-slots?dentistId=${selectedDentist}&date=${formattedDate}`,
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+        if (res.ok) {
+          const data = await res.json();
+          setBookedSlots(data);
+        }
+      } catch (err) {
+        console.error("Error fetching booked slots on mobile:", err);
+      }
+    };
+
+    fetchBookedSlots();
+  }, [selectedDentist, date, token, isBookingOpen]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -376,13 +412,23 @@ export default function AppointmentsScreen() {
               <View style={styles.timeRow}>
                 {timeSlots.map((slot) => {
                   const isSelected = time === slot;
+                  const isBooked = bookedSlots.includes(slot);
                   return (
                     <TouchableOpacity 
                       key={slot} 
-                      style={[styles.timeBtn, isSelected && styles.activeTimeBtn]}
+                      disabled={isBooked}
+                      style={[
+                        styles.timeBtn, 
+                        isSelected && styles.activeTimeBtn,
+                        isBooked && styles.bookedTimeBtn
+                      ]}
                       onPress={() => setTime(slot)}
                     >
-                      <Text style={[styles.timeBtnText, isSelected && styles.activeTimeBtnText]}>{slot}</Text>
+                      <Text style={[
+                        styles.timeBtnText, 
+                        isSelected && styles.activeTimeBtnText,
+                        isBooked && styles.bookedTimeBtnText
+                      ]}>{slot}</Text>
                     </TouchableOpacity>
                   );
                 })}
@@ -701,6 +747,14 @@ const styles = StyleSheet.create({
   activeTimeBtnText: {
     color: '#0D9488',
     fontWeight: '700',
+  },
+  bookedTimeBtn: {
+    backgroundColor: '#E2E8F0',
+    borderColor: '#CBD5E1',
+    opacity: 0.5,
+  },
+  bookedTimeBtnText: {
+    color: '#94A3B8',
   },
   notesInput: {
     backgroundColor: '#F8FAFC',

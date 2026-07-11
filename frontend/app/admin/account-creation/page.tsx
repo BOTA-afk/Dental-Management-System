@@ -26,6 +26,34 @@ export default function AccountCreationPage() {
   const [formData, setFormData] = useState({ fullName: '', email: '', phoneNumber: '', password: '', role: 'dentist' });
   const [pageLoading, setPageLoading] = useState(true);
 
+  const handleResetStaffPassword = async (staffId: string) => {
+    if (!confirm("Are you sure you want to generate a temporary password for this staff member? This will immediately replace their old password.")) {
+      return;
+    }
+
+    try {
+      const token = getAdminToken();
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/reset-staff-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'x-auth-token': token } : {}),
+        },
+        body: JSON.stringify({ staffId }),
+      });
+      
+      const data = await res.json();
+      if (res.ok) {
+        alert(data.message || "Temporary password issued and email dispatched successfully.");
+      } else {
+        alert(data.message || "Failed to reset staff password.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Network error resetting password.");
+    }
+  };
+
   const fetchStaff = async () => {
     try {
       const token = getAdminToken();
@@ -51,7 +79,7 @@ export default function AccountCreationPage() {
       }
       try {
         const userObj = JSON.parse(storedUser);
-        if (userObj.role !== "system_admin") {
+        if (userObj.role !== "system_admin" && userObj.role !== "assistant") {
           if (userObj.role === "dentist") {
             router.push("/dentist/dashboard");
           } else {
@@ -141,19 +169,31 @@ export default function AccountCreationPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {staff.map((member) => (
-            <div key={member._id} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="h-16 w-16 bg-blue-100 text-blue-700 rounded-2xl flex items-center justify-center font-black text-2xl">
-                  {member.fullName?.charAt(0) || "?"}
+            <div key={member._id} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex flex-col justify-between">
+              <div>
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="h-16 w-16 bg-blue-100 text-blue-700 rounded-2xl flex items-center justify-center font-black text-2xl font-black">
+                    {member.fullName?.charAt(0) || "?"}
+                  </div>
+                  <div>
+                    <h3 className="font-black text-lg">{member.fullName}</h3>
+                    <p className="text-sm text-blue-600 font-bold uppercase">{member.role}</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-black text-lg">{member.fullName}</h3>
-                  <p className="text-sm text-blue-600 font-bold uppercase">{member.role}</p>
+                <div className="space-y-2 text-sm text-slate-500">
+                  <div className="flex items-center gap-2"><Mail size={16}/> {member.email}</div>
+                  <div className="flex items-center gap-2"><Phone size={16}/> {member.phoneNumber}</div>
                 </div>
               </div>
-              <div className="space-y-2 text-sm text-slate-500">
-                <div className="flex items-center gap-2"><Mail size={16}/> {member.email}</div>
-                <div className="flex items-center gap-2"><Phone size={16}/> {member.phoneNumber}</div>
+
+              <div className="mt-6 pt-4 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => handleResetStaffPassword(member._id)}
+                  className="w-full py-2 bg-slate-50 border border-slate-200 hover:bg-rose-50 hover:border-rose-200 hover:text-rose-600 text-slate-600 rounded-xl text-xs font-bold transition duration-200 cursor-pointer"
+                >
+                  Generate Temp Password
+                </button>
               </div>
             </div>
           ))}

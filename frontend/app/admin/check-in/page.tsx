@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Search, Plus } from 'lucide-react';
 import AddPatientModal from '@/components/AddPatientModal';
 import Sidebar from '@/components/admin/Sidebar';
+import PatientDetailsModal from '@/components/PatientDetailsModal';
 
 interface Patient {
   _id: string;
@@ -14,6 +15,7 @@ interface Patient {
   dob: string;
   gender: string;
   nic: string;
+  homeAddress?: string;
   createdAt: string;
 }
 
@@ -24,6 +26,8 @@ export default function PatientsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
   const fetchPatients = async () => {
     try {
@@ -183,7 +187,8 @@ export default function PatientsPage() {
                       </td>
                       <td className="p-4 text-slate-600 text-sm">
                         {p.phoneNumber}<br/>
-                        <span className="text-xs text-slate-400 font-normal">{p.email}</span>
+                        <span className="text-xs text-slate-400 font-normal">{p.email}</span><br/>
+                        {p.homeAddress && <span className="text-xs text-slate-500 font-normal text-slate-500 block truncate max-w-[180px]" title={p.homeAddress}>{p.homeAddress}</span>}
                       </td>
                       <td className="p-4 text-slate-600 text-sm font-semibold">{p.nic}</td>
                       <td className="p-4 text-slate-600 text-sm">{p.gender}</td>
@@ -193,8 +198,16 @@ export default function PatientsPage() {
                           Active
                         </span>
                       </td>
-                      <td className="p-4 flex gap-3">
-                        <button className="text-blue-600 hover:text-blue-700 text-sm font-semibold cursor-pointer">View</button>
+                       <td className="p-4 flex gap-3">
+                        <button 
+                          onClick={() => {
+                            setSelectedPatient(p);
+                            setIsDetailsOpen(true);
+                          }}
+                          className="text-blue-600 hover:text-blue-700 text-sm font-semibold cursor-pointer"
+                        >
+                          View
+                        </button>
                         <button className="text-slate-500 hover:text-slate-700 text-sm font-semibold cursor-pointer">Edit</button>
                       </td>
                     </tr>
@@ -208,6 +221,14 @@ export default function PatientsPage() {
           isOpen={isModalOpen} 
           onClose={() => setIsModalOpen(false)} 
           onSuccess={fetchPatients}
+        />
+        <PatientDetailsModal
+          isOpen={isDetailsOpen}
+          onClose={() => {
+            setIsDetailsOpen(false);
+            setSelectedPatient(null);
+          }}
+          patient={selectedPatient}
         />
       </main>
     </div>

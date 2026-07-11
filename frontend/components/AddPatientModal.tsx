@@ -15,13 +15,14 @@ export default function AddPatientModal({ isOpen, onClose, onSuccess }: AddPatie
   const [phoneNumber, setPhoneNumber] = useState('');
   const [email, setEmail] = useState('');
   const [nic, setNic] = useState('');
+  const [homeAddress, setHomeAddress] = useState('');
   const [loading, setLoading] = useState(false);
 
   if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !dob || !gender || !phoneNumber || !email || !nic) {
+    if (!name || !dob || !gender || !phoneNumber || !email || !nic || !homeAddress) {
       alert("Please fill in all fields.");
       return;
     }
@@ -41,7 +42,8 @@ export default function AddPatientModal({ isOpen, onClose, onSuccess }: AddPatie
           phoneNumber,
           dob,
           gender,
-          nic
+          nic,
+          homeAddress
         })
       });
 
@@ -53,6 +55,7 @@ export default function AddPatientModal({ isOpen, onClose, onSuccess }: AddPatie
         setPhoneNumber('');
         setEmail('');
         setNic('');
+        setHomeAddress('');
         
         onClose();
         if (onSuccess) onSuccess();
@@ -140,6 +143,17 @@ export default function AddPatientModal({ isOpen, onClose, onSuccess }: AddPatie
               placeholder="Enter national identity card number"
               value={nic}
               onChange={(e) => setNic(e.target.value)}
+              className="w-full p-3.5 bg-slate-50 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 font-medium"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-1">Home Address <span className="text-red-500">*</span></label>
+            <input 
+              type="text"
+              placeholder="Enter patient home address"
+              value={homeAddress}
+              onChange={(e) => setHomeAddress(e.target.value)}
               className="w-full p-3.5 bg-slate-50 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 font-medium"
             />
           </div>

@@ -79,6 +79,39 @@ export default function PatientDashboard() {
     notes: ''
   });
 
+  const [bookedSlots, setBookedSlots] = useState<string[]>([]);
+
+  useEffect(() => {
+    setBookingForm(prev => ({ ...prev, time: '' }));
+  }, [bookingForm.dentistId, bookingForm.date]);
+
+  useEffect(() => {
+    if (!bookingForm.dentistId || !bookingForm.date) {
+      setBookedSlots([]);
+      return;
+    }
+
+    const fetchBookedSlots = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001"}/api/patient/appointments/booked-slots?dentistId=${bookingForm.dentistId}&date=${bookingForm.date}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        if (res.ok) {
+          const data = await res.json();
+          setBookedSlots(data);
+        }
+      } catch (err) {
+        console.error("Error fetching booked slots:", err);
+      }
+    };
+
+    fetchBookedSlots();
+  }, [bookingForm.dentistId, bookingForm.date]);
+
   const menu = [
     { title: "Dashboard", icon: LayoutDashboard },
     { title: "My Appointments", icon: CalendarDays },
@@ -861,14 +894,18 @@ export default function PatientDashboard() {
                 <div className="flex flex-wrap gap-2">
                   {timeSlots.map(slot => {
                     const isSelected = bookingForm.time === slot;
+                    const isBooked = bookedSlots.includes(slot);
                     return (
                       <button
                         type="button"
                         key={slot}
+                        disabled={isBooked}
                         onClick={() => setBookingForm({ ...bookingForm, time: slot })}
                         className={`px-4 py-2.5 rounded-full text-xs font-bold border transition ${
                           isSelected 
                             ? "bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-100" 
+                            : isBooked
+                            ? "bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed opacity-50"
                             : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100 cursor-pointer"
                         }`}
                       >

@@ -14,7 +14,8 @@ import {
   markNotificationAsRead,
   getBills,
   payBill,
-  createCheckoutSession
+  createCheckoutSession,
+  getBookedSlots
 } from '../controllers/patientController.js';
 import { verifyToken } from '../middleware/authMiddleware.js';
 
@@ -31,6 +32,7 @@ router.post('/reset-password', resetPassword);
 
 // Appointment routes
 router.get('/dentists', verifyToken, getDentists);
+router.get('/appointments/booked-slots', verifyToken, getBookedSlots);
 router.get('/appointments', verifyToken, getAppointments);
 router.post('/appointments', verifyToken, createAppointment);
 router.put('/appointments/:id/cancel', verifyToken, cancelAppointment);

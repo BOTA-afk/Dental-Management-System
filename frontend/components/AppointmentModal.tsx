@@ -35,6 +35,55 @@ export default function AppointmentModal({ isOpen, onClose, appointment, onSucce
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
   const [notes, setNotes] = useState('');
+  const [bookedSlots, setBookedSlots] = useState<string[]>([]);
+
+  // Clear time selection if dentist or date changes
+  useEffect(() => {
+    if (appointment) {
+      const origDate = new Date(appointment.date).toISOString().split('T')[0];
+      if (selectedDentist !== appointment.dentist?._id || date !== origDate) {
+        setTime('');
+      }
+    } else {
+      setTime('');
+    }
+  }, [selectedDentist, date, appointment]);
+
+  useEffect(() => {
+    if (!selectedDentist || !date) {
+      setBookedSlots([]);
+      return;
+    }
+
+    const fetchBookedSlots = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001"}/api/patient/appointments/booked-slots?dentistId=${selectedDentist}&date=${date}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        if (res.ok) {
+          const data = await res.json();
+          // If we are editing an appointment, we should exclude its own time slot from being marked as booked
+          if (appointment) {
+            const origDate = new Date(appointment.date).toISOString().split('T')[0];
+            if (selectedDentist === appointment.dentist?._id && date === origDate) {
+              const filteredData = data.filter((slot: string) => slot !== appointment.time);
+              setBookedSlots(filteredData);
+              return;
+            }
+          }
+          setBookedSlots(data);
+        }
+      } catch (err) {
+        console.error("Error fetching booked slots:", err);
+      }
+    };
+
+    fetchBookedSlots();
+  }, [selectedDentist, date, appointment]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -207,14 +256,18 @@ export default function AppointmentModal({ isOpen, onClose, appointment, onSucce
             <div className="flex flex-wrap gap-2">
               {timeSlots.map(slot => {
                 const isSelected = time === slot;
+                const isBooked = bookedSlots.includes(slot);
                 return (
                   <button 
                     type="button"
                     key={slot} 
+                    disabled={isBooked}
                     onClick={() => setTime(slot)}
                     className={`px-4 py-2.5 rounded-full text-xs font-bold border transition ${
                       isSelected 
                         ? "bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-100" 
+                        : isBooked
+                        ? "bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed opacity-50"
                         : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100 cursor-pointer"
                     }`}
                   >

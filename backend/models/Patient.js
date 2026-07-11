@@ -9,6 +9,7 @@ const patientSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   nic: { type: String, required: true, unique: true },
   password: { type: String, required: true },
+  homeAddress: { type: String, required: true },
   resetOtp: { type: String },
   resetOtpExpires: { type: Date },
 }, { timestamps: true });
