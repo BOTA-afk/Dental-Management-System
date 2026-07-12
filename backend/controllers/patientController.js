@@ -114,13 +114,6 @@ export const updatePatientProfile = async (req, res) => {
     const { name, phoneNumber, nic, dob, gender, homeAddress, allergies } = req.body;
     const patientId = req.user.id;
 
-    if (phoneNumber) {
-      const existingPatientPhone = await Patient.findOne({ phoneNumber, _id: { $ne: patientId } });
-      if (existingPatientPhone) {
-        return res.status(400).json({ message: "Phone number is already in use by another account." });
-      }
-    }
-
     if (nic) {
       const existingPatientNIC = await Patient.findOne({ nic, _id: { $ne: patientId } });
       if (existingPatientNIC) {
@@ -391,25 +384,7 @@ export const markNotificationAsRead = async (req, res) => {
 
 export const getBills = async (req, res) => {
   try {
-    let bills = await Billing.find({ patient: req.user.id }).sort({ createdAt: -1 });
-    // Seeding sample invoices for testing if none exist
-    if (bills.length === 0) {
-      const mock1 = await Billing.create({
-        patient: req.user.id,
-        amount: 4500,
-        treatment: 'Regular Checkup',
-        status: 'Unpaid',
-        date: new Date()
-      });
-      const mock2 = await Billing.create({
-        patient: req.user.id,
-        amount: 12500,
-        treatment: 'Root Canal',
-        status: 'Paid',
-        date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
-      });
-      bills = [mock1, mock2];
-    }
+    const bills = await Billing.find({ patient: req.user.id }).sort({ createdAt: -1 });
     res.json(bills);
   } catch (error) {
     res.status(500).json({ message: "Server error fetching bills", error: error.message });
@@ -476,8 +451,8 @@ export const createCheckoutSession = async (req, res) => {
         quantity: 1,
       }],
       mode: 'payment',
-      success_url: `${process.env.CLIENT_URL || 'http://localhost:3000'}/patient/dashboard?payment_success=true&bill_id=${id}`,
-      cancel_url: `${process.env.CLIENT_URL || 'http://localhost:3000'}/patient/dashboard?payment_cancel=true`,
+      success_url: `${process.env.CLIENT_URL || 'http://localhost:3000'}/patient/billing?payment_success=true&bill_id=${id}`,
+      cancel_url: `${process.env.CLIENT_URL || 'http://localhost:3000'}/patient/billing?payment_cancel=true`,
     });
 
     res.json({ url: session.url });

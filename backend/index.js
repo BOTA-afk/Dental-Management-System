@@ -65,6 +65,14 @@ const connectDB = async () => {
     const conn = await mongoose.connect(process.env.MONGO_URI);
 
     console.log(`✅ MongoDB Connected`);
+
+    // Drop unique index on phoneNumber if it exists to allow duplicate phone numbers
+    try {
+      await mongoose.connection.db.collection('patients').dropIndex('phoneNumber_1');
+      console.log(`🗑️ Dropped unique phoneNumber index from patients collection`);
+    } catch (indexErr) {
+      // Index might not exist or already dropped, which is fine
+    }
   } catch (error) {
     console.error(`Error: ${error.message}`);
     process.exit(1);
