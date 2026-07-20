@@ -50,7 +50,7 @@ interface PatientProfile {
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { token, user } = useAuth();
+  const { token, user, signOut } = useAuth();
   const [profile, setProfile] = useState<PatientProfile | null>(null);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
@@ -80,6 +80,11 @@ export default function HomeScreen() {
         fetch(`${process.env.EXPO_PUBLIC_API_URL}/patient/appointments`, { headers }),
         fetch(`${process.env.EXPO_PUBLIC_API_URL}/patient/notifications`, { headers })
       ]);
+
+      if (profileRes.status === 401 || appointmentsRes.status === 401 || notificationsRes.status === 401) {
+        await signOut();
+        return;
+      }
 
       if (profileRes.ok) {
         const profileData = await profileRes.json();

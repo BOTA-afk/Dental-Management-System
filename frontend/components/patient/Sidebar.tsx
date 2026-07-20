@@ -58,10 +58,8 @@ export default function PatientSidebar() {
   ];
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("patientToken");
-    localStorage.removeItem("patient");
-    localStorage.removeItem("user");
+    localStorage.clear();
+    sessionStorage.clear();
     window.location.href = "/";
   };
 

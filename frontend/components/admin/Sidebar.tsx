@@ -30,10 +30,9 @@ export default function Sidebar() {
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("adminToken");
-    localStorage.removeItem("user");
-    window.location.href = "/";
+    localStorage.clear();
+    sessionStorage.clear();
+    window.location.href = "/admin/login";
   };
 
   return (

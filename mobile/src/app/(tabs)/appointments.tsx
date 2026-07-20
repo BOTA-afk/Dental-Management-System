@@ -34,7 +34,7 @@ const treatments = ['Regular Checkup', 'Root Canal', 'Consultation', 'Orthodonti
 const timeSlots = ['09:00 AM', '10:00 AM', '11:00 AM', '01:30 PM', '02:30 PM', '03:30 PM'];
 
 export default function AppointmentsScreen() {
-  const { token } = useAuth();
+  const { token, signOut } = useAuth();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [dentists, setDentists] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -102,6 +102,10 @@ export default function AppointmentsScreen() {
           'Content-Type': 'application/json'
         }
       });
+      if (res.status === 401) {
+        await signOut();
+        return;
+      }
       if (res.ok) {
         const data = await res.json();
         setAppointments(data);

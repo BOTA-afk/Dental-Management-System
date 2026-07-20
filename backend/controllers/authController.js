@@ -3,21 +3,18 @@ import bcrypt from "bcryptjs";
 
 export const register = async (req, res) => {
   try {
-    const { fullName, email, phone, password, role } = req.body;
+    const { fullName, email, phone, phoneNumber, password, role } = req.body;
 
     // Check if user exists
     const existingUser = await User.findOne({ email });
     if (existingUser) return res.status(400).json({ error: "User already exists" });
 
-    // Hash Password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Create User
+    // Create User (password will be hashed by User schema pre-save hook)
     const newUser = new User({
       fullName,
       email,
-      phone,
-      password: hashedPassword,
+      phoneNumber: phoneNumber || phone || '',
+      password,
       role
     });
 

@@ -30,14 +30,14 @@ import { getAuthUrl } from '../utils/googleCalendarService.js';
 
 const router = express.Router();
 
-router.post("/register", createAdmin);
+router.post("/register", verifyToken, isAdmin, createAdmin);
 router.post("/login", login);
 router.post("/create-account", verifyToken, isAdminOrAssistant, createAccount);
 router.get('/staff', verifyToken, isAdminOrAssistant, getStaff);
 router.post('/reset-staff-password', verifyToken, isAdminOrAssistant, resetStaffPassword);
-router.post('/update-password', verifyToken, updatePassword);
-router.get('/profile', verifyToken, getStaffProfile);
-router.put('/profile', verifyToken, updateStaffProfile);
+router.post('/update-password', verifyToken, isStaff, updatePassword);
+router.get('/profile', verifyToken, isStaff, getStaffProfile);
+router.put('/profile', verifyToken, isStaff, updateStaffProfile);
 router.get('/dentist/notifications', verifyToken, isStaff, getDentistNotifications);
 router.put('/dentist/notifications/read', verifyToken, isStaff, markDentistNotificationsAsRead);
 router.get('/calendar/auth', (req, res) => {

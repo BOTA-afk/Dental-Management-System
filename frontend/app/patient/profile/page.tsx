@@ -5,6 +5,7 @@ import { Search } from "lucide-react";
 import PatientSidebar from "@/components/patient/Sidebar";
 
 export default function PatientProfile() {
+  const [isAuthorized, setIsAuthorized] = useState(false);
   const [patient, setPatient] = useState<any>(null);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
@@ -42,9 +43,18 @@ export default function PatientProfile() {
         window.location.href = "/";
         return;
       }
+      setIsAuthorized(true);
       fetchPatientData();
     }
   }, []);
+
+  if (!isAuthorized) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div>
+      </div>
+    );
+  }
 
   const calculateAge = (dobString: string) => {
     if (!dobString) return "";

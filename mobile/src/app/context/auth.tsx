@@ -33,7 +33,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const segments = useSegments();
 
-  // 1. INITIAL SESSION CHECK
+  // 1. INITIAL SESSION CHECK WITH BACKEND VALIDATION
   useEffect(() => {
     const checkUser = async () => {
       try {
@@ -41,7 +41,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const storedUserData = await SecureStore.getItemAsync('user_data');
 
         if (storedToken && storedUserData) {
-          setToken(storedToken); // <--- ✅ Load token into state
+          // Validate token with backend
+          try {
+            const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/patient/profile`, {
+              headers: {
+                'Authorization': `Bearer ${storedToken}`,
+                'Content-Type': 'application/json'
+              }
+            });
+            if (res.status === 401 || res.status === 403) {
+              await SecureStore.deleteItemAsync('token');
+              await SecureStore.deleteItemAsync('user_data');
+              setToken(null);
+              setUser(null);
+              return;
+            }
+          } catch (netErr) {
+            console.error("Backend token verification network error:", netErr);
+          }
+
+          setToken(storedToken);
           setUser(JSON.parse(storedUserData));
         }
       } catch (e) {

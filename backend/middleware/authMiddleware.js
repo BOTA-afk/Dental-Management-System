@@ -56,3 +56,15 @@ export const isAdminOrAssistant = (req, res, next) => {
     return res.status(403).json({ message: "Access denied. Admin or assistant only." });
   }
 };
+
+/**
+ * Middleware to restrict routes to patient only.
+ * Call this AFTER verifyToken.
+ */
+export const isPatient = (req, res, next) => {
+  if (req.user && req.user.role === 'patient') {
+    next();
+  } else {
+    return res.status(403).json({ message: "Access denied. Patient role required." });
+  }
+};

@@ -46,8 +46,38 @@ interface Notification {
 const treatments = ['Regular Checkup', 'Root Canal', 'Consultation', 'Orthodontics', 'Teeth Cleaning', 'Teeth Whitening'];
 const timeSlots = ['09:00 AM', '10:00 AM', '11:00 AM', '01:30 PM', '02:30 PM', '03:30 PM'];
 
+const getTodayString = () => {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const isSlotInPast = (selectedDateStr: string, slotStr: string): boolean => {
+  if (!selectedDateStr) return false;
+  const todayStr = getTodayString();
+  if (selectedDateStr < todayStr) return true;
+  if (selectedDateStr > todayStr) return false;
+
+  const now = new Date();
+  const parts = slotStr.trim().split(' ');
+  if (parts.length < 2) return false;
+  const timePart = parts[0];
+  const modifier = parts[1];
+  let [hours, minutes] = timePart.split(':').map(Number);
+  if (modifier === 'PM' && hours < 12) hours += 12;
+  if (modifier === 'AM' && hours === 12) hours = 0;
+
+  const slotDate = new Date();
+  slotDate.setHours(hours, minutes, 0, 0);
+
+  return slotDate.getTime() <= now.getTime();
+};
+
 export default function PatientDashboard() {
   const router = useRouter();
+  const [isAuthorized, setIsAuthorized] = useState(false);
   const [patient, setPatient] = useState<any>(null);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [dentists, setDentists] = useState<any[]>([]);
@@ -60,7 +90,7 @@ export default function PatientDashboard() {
   
   const [bookingForm, setBookingForm] = useState({
     dentistId: '',
-    treatment: '',
+    treatment: 'Consultation',
     date: '',
     time: '',
     notes: ''
@@ -181,12 +211,21 @@ export default function PatientDashboard() {
         window.location.href = "/";
         return;
       }
+      setIsAuthorized(true);
       fetchPatientData();
       fetchAppointments();
       fetchDentists();
       fetchNotifications();
     }
   }, []);
+
+  if (!isAuthorized) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div>
+      </div>
+    );
+  }
 
   const handleCancelAppointment = async (id: string) => {
     if (!confirm("Are you sure you want to cancel this appointment?")) return;
@@ -214,24 +253,37 @@ export default function PatientDashboard() {
 
   const handleBookAppointmentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!bookingForm.dentistId || !bookingForm.treatment || !bookingForm.date || !bookingForm.time) {
+    const todayStr = getTodayString();
+    if (bookingForm.date && bookingForm.date < todayStr) {
+      alert("Cannot select a past date.");
+      return;
+    }
+    if (isSlotInPast(bookingForm.date, bookingForm.time)) {
+      alert("Cannot select a past time slot.");
+      return;
+    }
+    if (!bookingForm.dentistId || !bookingForm.date || !bookingForm.time) {
       alert("Please fill in all required fields.");
       return;
     }
     setBookingLoading(true);
     try {
+      const payload = {
+        ...bookingForm,
+        treatment: bookingForm.treatment || 'Consultation'
+      };
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001"}/api/patient/appointments`, {
         method: 'POST',
         headers: { 
           "Authorization": `Bearer ${localStorage.getItem("token")}`,
           "Content-Type": "application/json" 
         },
-        body: JSON.stringify(bookingForm)
+        body: JSON.stringify(payload)
       });
       if (response.ok) {
         alert("Appointment booked successfully! PDF Receipt confirmation has been emailed.");
         setIsBookingOpen(false);
-        setBookingForm({ dentistId: '', treatment: '', date: '', time: '', notes: '' });
+        setBookingForm({ dentistId: '', treatment: 'Consultation', date: '', time: '', notes: '' });
         fetchAppointments();
         fetchNotifications();
       } else {
@@ -448,7 +500,7 @@ export default function PatientDashboard() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-fade-in">
           <div className="bg-white w-[500px] max-h-[90vh] overflow-y-auto p-8 rounded-3xl shadow-2xl border">
             <h2 className="text-2xl font-bold mb-2 text-slate-800">Book Appointment</h2>
-            <p className="text-slate-500 mb-6 text-sm">Select doctor, treatment type, and choose a time slot.</p>
+            <p className="text-slate-500 mb-6 text-sm">Select doctor, date, and choose a time slot.</p>
 
             <form onSubmit={handleBookAppointmentSubmit} className="space-y-5">
               <div>
@@ -466,23 +518,10 @@ export default function PatientDashboard() {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Select Treatment *</label>
-                <select 
-                  value={bookingForm.treatment}
-                  onChange={(e) => setBookingForm({ ...bookingForm, treatment: e.target.value })}
-                  className="w-full p-4 bg-slate-50 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 font-medium"
-                >
-                  <option value="">Choose Treatment</option>
-                  {treatments.map(t => (
-                    <option key={t} value={t}>{t}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2">Date *</label>
                 <input 
                   type="date"
+                  min={getTodayString()}
                   value={bookingForm.date}
                   onChange={(e) => setBookingForm({ ...bookingForm, date: e.target.value })}
                   className="w-full p-4 bg-slate-50 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 font-medium"
@@ -495,16 +534,19 @@ export default function PatientDashboard() {
                   {timeSlots.map(slot => {
                     const isSelected = bookingForm.time === slot;
                     const isBooked = bookedSlots.includes(slot);
+                    const isPast = isSlotInPast(bookingForm.date, slot);
+                    const isDisabled = isBooked || isPast;
+
                     return (
                       <button
                         type="button"
                         key={slot}
-                        disabled={isBooked}
+                        disabled={isDisabled}
                         onClick={() => setBookingForm({ ...bookingForm, time: slot })}
                         className={`px-4 py-2.5 rounded-full text-xs font-bold border transition ${
                           isSelected 
                             ? "bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-100" 
-                            : isBooked
+                            : isDisabled
                             ? "bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed opacity-50"
                             : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100 cursor-pointer"
                         }`}

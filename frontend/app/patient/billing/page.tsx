@@ -34,6 +34,7 @@ interface Bill {
 }
 
 export default function PatientBilling() {
+  const [isAuthorized, setIsAuthorized] = useState(false);
   const [patient, setPatient] = useState<any>(null);
   const [bills, setBills] = useState<Bill[]>([]);
   const [paymentLoading, setPaymentLoading] = useState<string | null>(null);
@@ -83,6 +84,7 @@ export default function PatientBilling() {
         window.location.href = "/";
         return;
       }
+      setIsAuthorized(true);
       fetchPatientData();
       fetchBills();
 
@@ -144,6 +146,14 @@ export default function PatientBilling() {
       }
     }
   }, []);
+
+  if (!isAuthorized) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div>
+      </div>
+    );
+  }
 
   const handlePayBill = async (billId: string) => {
     setPaymentLoading(billId);
