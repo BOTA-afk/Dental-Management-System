@@ -14,7 +14,7 @@ interface Patient {
 
 interface BillItem {
   name: string;
-  cost: number;
+  cost: number | string;
   customName?: string;
 }
 
@@ -69,7 +69,7 @@ export default function AdminBillingPage() {
 
   // Payment choice modal states
   const [showPaymentChoiceModal, setShowPaymentChoiceModal] = useState(false);
-  const [amountToPayNow, setAmountToPayNow] = useState<number>(0);
+  const [amountToPayNow, setAmountToPayNow] = useState<number | string>(0);
   const [payNowMethod, setPayNowMethod] = useState<'Cash' | 'Card'>('Cash');
   const [payNowOrLater, setPayNowOrLater] = useState<'now' | 'later' | null>(null);
   
@@ -284,8 +284,8 @@ export default function AdminBillingPage() {
     if (choice === 'now') {
       finalPaymentMethod = payNowMethod;
       if (payNowMethod === 'Cash') {
-        finalAmountPaid = amountToPayNow;
-        finalDueAmount = Math.max(0, total - amountToPayNow);
+        finalAmountPaid = Number(amountToPayNow) || 0;
+        finalDueAmount = Math.max(0, total - (Number(amountToPayNow) || 0));
         if (finalDueAmount === 0) {
           finalStatus = 'Paid';
         } else if (finalAmountPaid > 0) {
@@ -331,7 +331,7 @@ export default function AdminBillingPage() {
               'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-              amountToPay: amountToPayNow
+              amountToPay: Number(amountToPayNow) || 0
             })
           });
           if (checkRes.ok) {
@@ -377,9 +377,10 @@ export default function AdminBillingPage() {
       return;
     }
 
-    const newlyPaid = amountToPayNow;
+    const totalAmount = finalItems.reduce((sum, item) => sum + (Number(item.cost) || 0), 0);
+    const newlyPaid = Number(amountToPayNow) || 0;
     const updatedAmountPaid = (selectedBill.amountPaid || 0) + newlyPaid;
-    const updatedDueAmount = Math.max(0, selectedBill.amount - updatedAmountPaid);
+    const updatedDueAmount = Math.max(0, totalAmount - updatedAmountPaid);
     const updatedStatus = updatedDueAmount === 0 ? 'Paid' : 'Partially Paid';
 
     try {
@@ -391,6 +392,7 @@ export default function AdminBillingPage() {
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
+          amount: totalAmount,
           status: updatedStatus,
           paymentMethod: 'Cash',
           items: finalItems,
@@ -418,6 +420,7 @@ export default function AdminBillingPage() {
   };
 
   const handlePayCard = async (billId: string) => {
+    if (!selectedBill) return;
     const finalItems = items.map(item => ({
       name: item.name === 'Custom' ? (item.customName || 'Custom Service') : item.name,
       cost: Number(item.cost) || 0
@@ -427,6 +430,11 @@ export default function AdminBillingPage() {
       alert("Please make sure all items have a valid service name and cost greater than 0.");
       return;
     }
+
+    const totalAmount = finalItems.reduce((sum, item) => sum + (Number(item.cost) || 0), 0);
+    const newlyPaid = Number(amountToPayNow) || 0;
+    const updatedAmountPaid = (selectedBill.amountPaid || 0) + newlyPaid;
+    const updatedDueAmount = Math.max(0, totalAmount - updatedAmountPaid);
 
     try {
       const token = localStorage.getItem("token");
@@ -438,10 +446,12 @@ export default function AdminBillingPage() {
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
+          amount: totalAmount,
           status: 'Pending',
           paymentMethod: 'Card',
           items: finalItems,
-          dentistId
+          dentistId,
+          dueAmount: updatedDueAmount
         })
       });
 
@@ -458,7 +468,7 @@ export default function AdminBillingPage() {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          amountToPay: amountToPayNow
+          amountToPay: Number(amountToPayNow) || 0
         })
       });
       
@@ -492,7 +502,7 @@ export default function AdminBillingPage() {
     } else {
       setItems([{ name: bill.treatment, cost: bill.amount }]);
     }
-    const due = bill.dueAmount !== undefined ? bill.dueAmount : bill.amount;
+    const due = bill.status === 'Paid' ? 0 : (bill.dueAmount || Math.max(0, bill.amount - (bill.amountPaid || 0)));
     setAmountToPayNow(due);
     setIsEditModalOpen(true);
   };
@@ -588,7 +598,7 @@ export default function AdminBillingPage() {
                       <td className="p-4 text-slate-900 text-sm font-bold text-right">
                         Rs. {bill.amount.toLocaleString()}
                         <div className="text-[10px] text-slate-400 font-normal mt-0.5">
-                          Paid: Rs. {(bill.amountPaid || 0).toLocaleString()} | Due: Rs. {(bill.dueAmount !== undefined ? bill.dueAmount : (bill.status === 'Paid' ? 0 : bill.amount)).toLocaleString()}
+                          Paid: Rs. {(bill.amountPaid || 0).toLocaleString()} | Due: Rs. {(bill.status === 'Paid' ? 0 : (bill.dueAmount || Math.max(0, bill.amount - (bill.amountPaid || 0)))).toLocaleString()}
                         </div>
                       </td>
                       <td className="p-4 text-sm">
@@ -719,7 +729,7 @@ export default function AdminBillingPage() {
                     <label className="block text-slate-700 text-sm font-bold">Billing Items</label>
                     <button
                       type="button"
-                      onClick={() => setItems([...items, { name: '', cost: 0 }])}
+                      onClick={() => setItems([...items, { name: '', cost: '' }])}
                       className="text-xs text-blue-600 hover:text-blue-700 font-bold flex items-center gap-1 cursor-pointer"
                     >
                       <Plus size={14} /> Add Item
@@ -769,13 +779,13 @@ export default function AdminBillingPage() {
                           <input
                             type="number"
                             placeholder="Cost"
-                            value={item.cost || ''}
+                            value={item.cost ?? ''}
                             onChange={(e) => {
                               const updated = [...items];
-                              updated[idx].cost = parseFloat(e.target.value) || 0;
+                              updated[idx].cost = e.target.value;
                               setItems(updated);
                             }}
-                            className="w-full p-2.5 rounded-lg border border-slate-300 text-slate-800 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 font-semibold"
+                            className="w-full p-2.5 rounded-lg border border-slate-350 text-slate-800 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 font-semibold"
                             required
                           />
                         </div>
@@ -862,7 +872,7 @@ export default function AdminBillingPage() {
                     <label className="block text-slate-700 text-sm font-bold">Billing Items</label>
                     <button
                       type="button"
-                      onClick={() => setItems([...items, { name: '', cost: 0 }])}
+                      onClick={() => setItems([...items, { name: '', cost: '' }])}
                       className="text-xs text-blue-600 hover:text-blue-700 font-bold flex items-center gap-1 cursor-pointer"
                     >
                       <Plus size={14} /> Add Item
@@ -906,13 +916,13 @@ export default function AdminBillingPage() {
                         <input
                           type="number"
                           placeholder="Cost"
-                          value={item.cost || ''}
+                          value={item.cost ?? ''}
                           onChange={(e) => {
                             const updated = [...items];
-                            updated[idx].cost = parseFloat(e.target.value) || 0;
+                            updated[idx].cost = e.target.value;
                             setItems(updated);
                           }}
-                          className="w-full p-2.5 rounded-lg border border-slate-300 text-slate-800 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 font-semibold"
+                          className="w-full p-2.5 rounded-lg border border-slate-350 text-slate-800 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 font-semibold"
                           required
                         />
                       </div>
@@ -942,7 +952,7 @@ export default function AdminBillingPage() {
                   <div className="p-3 bg-blue-50 rounded-2xl text-center border border-blue-100 shadow-sm">
                     <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">Remaining Due</span>
                     <p className="text-lg font-black text-blue-800 mt-0.5">
-                      Rs. {(selectedBill.dueAmount !== undefined ? selectedBill.dueAmount : selectedBill.amount).toLocaleString()}
+                      Rs. {Math.max(0, totalAmount - (selectedBill.amountPaid || 0)).toLocaleString()}
                     </p>
                   </div>
                 </div>
@@ -952,11 +962,16 @@ export default function AdminBillingPage() {
                     <label className="block text-slate-700 text-xs font-bold uppercase mb-1.5">Installment Amount to Pay Now (Rs.)</label>
                     <input
                       type="number"
-                      value={amountToPayNow || ''}
+                      value={amountToPayNow ?? ''}
                       onChange={(e) => {
-                        const val = Math.max(0, Number(e.target.value) || 0);
-                        const maxDue = selectedBill.dueAmount !== undefined ? selectedBill.dueAmount : selectedBill.amount;
-                        setAmountToPayNow(Math.min(maxDue, val));
+                        const raw = e.target.value;
+                        const val = Number(raw) || 0;
+                        const maxDue = Math.max(0, totalAmount - (selectedBill.amountPaid || 0));
+                        if (val > maxDue) {
+                          setAmountToPayNow(maxDue);
+                        } else {
+                          setAmountToPayNow(raw);
+                        }
                       }}
                       className="w-full p-3 rounded-xl border border-slate-300 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold"
                     />
@@ -1037,15 +1052,20 @@ export default function AdminBillingPage() {
                     <label className="block text-slate-700 text-xs font-bold uppercase mb-1.5">Amount to Pay (Rs.)</label>
                     <input
                       type="number"
-                      value={amountToPayNow || ''}
+                      value={amountToPayNow ?? ''}
                       onChange={(e) => {
-                        const val = Math.max(0, Number(e.target.value) || 0);
+                        const raw = e.target.value;
+                        const val = Number(raw) || 0;
                         const finalItems = items.map(item => ({
                           name: item.name === 'Custom' ? (item.customName || 'Custom Service') : item.name,
                           cost: Number(item.cost) || 0
                         }));
                         const total = finalItems.reduce((sum, item) => sum + item.cost, 0);
-                        setAmountToPayNow(Math.min(total, val));
+                        if (val > total) {
+                          setAmountToPayNow(total);
+                        } else {
+                          setAmountToPayNow(raw);
+                        }
                       }}
                       className="w-full p-3 rounded-xl border border-slate-300 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold"
                     />
@@ -1057,7 +1077,7 @@ export default function AdminBillingPage() {
                       cost: Number(item.cost) || 0
                     }));
                     const total = finalItems.reduce((sum, item) => sum + item.cost, 0);
-                    const due = Math.max(0, total - amountToPayNow);
+                    const due = Math.max(0, total - (Number(amountToPayNow) || 0));
                     return (
                       <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100 text-xs font-bold text-slate-500 flex justify-between">
                         <span>REMAINING DUE:</span>

@@ -38,7 +38,7 @@ export default function PatientsPage() {
   const [bills, setBills] = useState<any[]>([]);
   const [isInstallmentModalOpen, setIsInstallmentModalOpen] = useState(false);
   const [payingBill, setPayingBill] = useState<any>(null);
-  const [installmentAmount, setInstallmentAmount] = useState<number>(0);
+  const [installmentAmount, setInstallmentAmount] = useState<number | string>(0);
   const [installmentMethod, setInstallmentMethod] = useState<'Cash' | 'Card'>('Cash');
   const [submittingInstallment, setSubmittingInstallment] = useState(false);
 
@@ -148,22 +148,29 @@ export default function PatientsPage() {
   };
 
   const getTodayCheckInStatus = (patientId: string) => {
-    const todayStr = new Date().toISOString().split('T')[0];
+    const today = new Date();
+    const todayYear = today.getFullYear();
+    const todayMonth = today.getMonth();
+    const todayDate = today.getDate();
+    
     const todayAppt = appointments.find(appt => {
       const pId = appt.patient?._id || appt.patient;
       if (pId !== patientId) return false;
       if (!appt.date) return false;
-      const apptDate = new Date(appt.date).toISOString().split('T')[0];
-      return apptDate === todayStr;
+      const apptDateObj = new Date(appt.date);
+      return apptDateObj.getFullYear() === todayYear &&
+             apptDateObj.getMonth() === todayMonth &&
+             apptDateObj.getDate() === todayDate;
     });
     return todayAppt && ['Arrived', 'In Progress', 'Completed'].includes(todayAppt.status) ? todayAppt.status : null;
   };
 
   const handleInstallmentSubmit = async () => {
-    if (!payingBill || installmentAmount <= 0 || !selectedPatient) return;
+    const amountNum = Number(installmentAmount) || 0;
+    if (!payingBill || amountNum <= 0 || !selectedPatient) return;
     
     const maxDue = payingBill.dueAmount !== undefined ? payingBill.dueAmount : payingBill.amount;
-    if (installmentAmount > maxDue) {
+    if (amountNum > maxDue) {
       alert(`Installment amount cannot exceed Rs. ${maxDue}`);
       return;
     }
@@ -171,7 +178,7 @@ export default function PatientsPage() {
     setSubmittingInstallment(true);
     try {
       const token = localStorage.getItem("token");
-      const updatedAmountPaid = (payingBill.amountPaid || 0) + installmentAmount;
+      const updatedAmountPaid = (payingBill.amountPaid || 0) + amountNum;
       const updatedDueAmount = Math.max(0, payingBill.amount - updatedAmountPaid);
       const updatedStatus = updatedDueAmount === 0 ? 'Paid' : 'Partially Paid';
 
@@ -345,9 +352,7 @@ export default function PatientsPage() {
                     <th className="p-4 font-semibold text-slate-700 text-sm">Contact</th>
                     <th className="p-4 font-semibold text-slate-700 text-sm">NIC Number</th>
                     <th className="p-4 font-semibold text-slate-700 text-sm">Gender</th>
-                    <th className="p-4 font-semibold text-slate-700 text-sm">Date Registered</th>
                     <th className="p-4 font-semibold text-slate-700 text-sm">Billing Details</th>
-                    <th className="p-4 font-semibold text-slate-700 text-sm">Status</th>
                     <th className="p-4 font-semibold text-slate-700 text-sm">Actions</th>
                   </tr>
                 </thead>
@@ -372,7 +377,6 @@ export default function PatientsPage() {
                       </td>
                       <td className="p-4 text-slate-600 text-sm font-semibold">{p.nic}</td>
                       <td className="p-4 text-slate-600 text-sm">{p.gender}</td>
-                      <td className="p-4 text-slate-600 text-sm">{new Date(p.createdAt).toLocaleDateString()}</td>
                       <td className="p-4 text-sm">
                         {(() => {
                           const summary = getPatientBillingSummary(p._id);
@@ -407,11 +411,6 @@ export default function PatientsPage() {
                             </div>
                           );
                         })()}
-                      </td>
-                      <td className="p-4 text-sm">
-                        <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-600 border border-blue-100">
-                          Active
-                        </span>
                       </td>
                        <td className="p-4 flex gap-3 flex-wrap items-center">
                         <button 
@@ -538,7 +537,7 @@ export default function PatientsPage() {
                     }
 
                     return patientBills.map(bill => {
-                      const due = bill.dueAmount !== undefined ? bill.dueAmount : (bill.status === 'Paid' ? 0 : bill.amount);
+                      const due = bill.status === 'Paid' ? 0 : (bill.dueAmount || Math.max(0, bill.amount - (bill.amountPaid || 0)));
                       return (
                         <div key={bill._id} className="p-4 bg-slate-50 border border-slate-100 rounded-2xl flex flex-col gap-2.5">
                           <div className="flex justify-between items-start">
@@ -586,17 +585,22 @@ export default function PatientsPage() {
                         type="number"
                         value={installmentAmount || ''}
                         onChange={(e) => {
-                          const val = Math.max(0, Number(e.target.value) || 0);
-                          const maxDue = payingBill.dueAmount !== undefined ? payingBill.dueAmount : payingBill.amount;
-                          setInstallmentAmount(Math.min(maxDue, val));
+                          const raw = e.target.value;
+                          const val = Number(raw) || 0;
+                          const maxDue = payingBill.status === 'Paid' ? 0 : (payingBill.dueAmount || Math.max(0, payingBill.amount - (payingBill.amountPaid || 0)));
+                          if (val > maxDue) {
+                            setInstallmentAmount(maxDue);
+                          } else {
+                            setInstallmentAmount(raw);
+                          }
                         }}
                         className="w-full p-3 rounded-xl border border-slate-300 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold"
                       />
                     </div>
 
                     {(() => {
-                      const maxDue = payingBill.dueAmount !== undefined ? payingBill.dueAmount : payingBill.amount;
-                      const remaining = Math.max(0, maxDue - installmentAmount);
+                      const maxDue = payingBill.status === 'Paid' ? 0 : (payingBill.dueAmount || Math.max(0, payingBill.amount - (payingBill.amountPaid || 0)));
+                      const remaining = Math.max(0, maxDue - (Number(installmentAmount) || 0));
                       return (
                         <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl flex justify-between text-xs font-bold text-slate-500">
                           <span>REMAINING BALANCE DUE:</span>

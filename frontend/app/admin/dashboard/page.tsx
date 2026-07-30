@@ -65,11 +65,17 @@ export default function Dashboard() {
     }
   };
 
-  const todayStr = new Date().toISOString().split('T')[0];
+  const today = new Date();
+  const todayYear = today.getFullYear();
+  const todayMonth = today.getMonth();
+  const todayDate = today.getDate();
+
   const todayAppointments = appointments.filter(appt => {
     if (!appt.date) return false;
-    const apptDate = new Date(appt.date).toISOString().split('T')[0];
-    return apptDate === todayStr;
+    const apptDateObj = new Date(appt.date);
+    return apptDateObj.getFullYear() === todayYear &&
+           apptDateObj.getMonth() === todayMonth &&
+           apptDateObj.getDate() === todayDate;
   });
 
   const scheduledToday = todayAppointments.length;

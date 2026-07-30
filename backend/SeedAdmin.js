@@ -13,7 +13,7 @@ const seedAdmin = async () => {
     // Create a default admin
     const adminData = {
       fullName: "System Admin",
-      email: "admin@dentplus.com",
+      email: "admin12@dentplus.com",
       password: "password123" // This will be hashed by your Admin model pre-save hook
     };
 
