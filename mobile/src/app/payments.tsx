@@ -5,15 +5,15 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  SafeAreaView,
   ActivityIndicator,
   RefreshControl,
   Image,
   ScrollView,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useAuth } from './context/auth';
+import { useAuth } from '../context/auth';
 
 interface BillItem {
   name: string;
@@ -23,6 +23,8 @@ interface BillItem {
 interface Bill {
   _id: string;
   amount: number;
+  amountPaid?: number;
+  dueAmount?: number;
   treatment: string;
   status: 'Paid' | 'Unpaid' | 'Pending' | 'Partially Paid';
   paymentMethod?: 'Cash' | 'Card' | 'N/A';
@@ -77,7 +79,7 @@ export default function PaymentsScreen() {
 
   const outstandingBalance = bills
     .filter(b => ['Unpaid', 'Pending', 'Partially Paid'].includes(b.status))
-    .reduce((sum, b) => sum + b.amount, 0);
+    .reduce((sum, b) => sum + (b.dueAmount !== undefined ? b.dueAmount : (b.status === 'Paid' ? 0 : b.amount)), 0);
 
   const toggleExpand = (id: string) => {
     setExpandedBillId(expandedBillId === id ? null : id);
@@ -121,8 +123,12 @@ export default function PaymentsScreen() {
           
           <View style={styles.cardHeaderRight}>
             <View style={styles.amountContainer}>
-              <Text style={styles.amountLabel}>Amount</Text>
-              <Text style={styles.amountValue}>Rs. {item.amount.toLocaleString()}</Text>
+              <Text style={styles.amountLabel}>
+                {item.status === 'Partially Paid' ? 'Due Amount' : 'Amount'}
+              </Text>
+              <Text style={styles.amountValue}>
+                Rs. {(item.dueAmount !== undefined ? item.dueAmount : (item.status === 'Paid' ? 0 : item.amount)).toLocaleString()}
+              </Text>
             </View>
             <Ionicons 
               name={isExpanded ? "chevron-up" : "chevron-down"} 
@@ -176,6 +182,24 @@ export default function PaymentsScreen() {
                   <Text style={styles.totalLabel}>Total Amount</Text>
                   <Text style={styles.totalValue}>Rs. {item.amount.toLocaleString()}</Text>
                 </View>
+
+                {item.amountPaid !== undefined && item.amountPaid > 0 && (
+                  <View style={styles.srvRow}>
+                    <Text style={styles.srvName}>Amount Paid</Text>
+                    <Text style={[styles.srvCost, { color: '#0E6228', fontWeight: '500' }]}>
+                      - Rs. {item.amountPaid.toLocaleString()}
+                    </Text>
+                  </View>
+                )}
+
+                {item.status === 'Partially Paid' && (
+                  <View style={[styles.srvRow, styles.noBorder, { marginTop: 4 }]}>
+                    <Text style={[styles.srvName, { fontWeight: '700' }]}>Remaining Due</Text>
+                    <Text style={[styles.srvCost, { fontWeight: '700', color: '#B91C1C' }]}>
+                      Rs. {(item.dueAmount !== undefined ? item.dueAmount : (item.amount - (item.amountPaid || 0))).toLocaleString()}
+                    </Text>
+                  </View>
+                )}
               </View>
             </View>
           </View>

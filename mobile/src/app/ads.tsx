@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { useRouter, Redirect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useAuth } from './context/auth';
+import { useAuth } from '../context/auth';
 
 const { width, height } = Dimensions.get('window');
 

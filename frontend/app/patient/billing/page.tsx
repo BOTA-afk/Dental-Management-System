@@ -331,11 +331,37 @@ export default function PatientBilling() {
                                   <span className="text-slate-800">Total Invoice Amount</span>
                                   <span className="text-blue-600">Rs. {bill.amount.toLocaleString()}</span>
                                 </div>
+                                {bill.amountPaid !== undefined && bill.amountPaid > 0 && (
+                                  <div className="flex justify-between items-center px-4 py-3 text-sm border-t text-green-700 font-semibold">
+                                    <span>Amount Paid</span>
+                                    <span>- Rs. {bill.amountPaid.toLocaleString()}</span>
+                                  </div>
+                                )}
+                                {bill.status === 'Partially Paid' && (
+                                  <div className="flex justify-between items-center px-4 py-3 bg-red-50/50 text-sm text-red-700 font-bold border-t">
+                                    <span>Remaining Due</span>
+                                    <span>Rs. {(bill.dueAmount !== undefined ? bill.dueAmount : (bill.amount - (bill.amountPaid || 0))).toLocaleString()}</span>
+                                  </div>
+                                )}
                               </div>
                             ) : (
-                              <div className="bg-white rounded-2xl border border-slate-100 p-4 flex justify-between items-center text-sm font-semibold text-slate-700 max-w-xl">
-                                <span>{bill.treatment}</span>
-                                <span className="font-bold text-slate-900">Rs. {bill.amount.toLocaleString()}</span>
+                              <div className="bg-white rounded-2xl border border-slate-100 p-4 text-sm font-semibold text-slate-700 max-w-xl divide-y divide-slate-100">
+                                <div className="flex justify-between items-center pb-3">
+                                  <span>{bill.treatment}</span>
+                                  <span className="font-bold text-slate-900">Rs. {bill.amount.toLocaleString()}</span>
+                                </div>
+                                {bill.amountPaid !== undefined && bill.amountPaid > 0 && (
+                                  <div className="flex justify-between items-center py-3 text-green-700 font-semibold">
+                                    <span>Amount Paid</span>
+                                    <span>- Rs. {bill.amountPaid.toLocaleString()}</span>
+                                  </div>
+                                )}
+                                {bill.status === 'Partially Paid' && (
+                                  <div className="flex justify-between items-center pt-3 text-red-700 font-bold">
+                                    <span>Remaining Due</span>
+                                    <span>Rs. {(bill.dueAmount !== undefined ? bill.dueAmount : (bill.amount - (bill.amountPaid || 0))).toLocaleString()}</span>
+                                  </div>
+                                )}
                               </div>
                             )}
                           </div>

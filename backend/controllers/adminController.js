@@ -506,13 +506,31 @@ export const createBill = async (req, res) => {
       calculatedTreatment = items.map(item => item.name).filter(Boolean).join(', ');
     }
 
+    let finalAmountPaid = amountPaid !== undefined ? Number(amountPaid) : 0;
+    let finalStatus = status || 'Unpaid';
+
+    if (finalStatus === 'Paid') {
+      finalAmountPaid = calculatedAmount;
+    } else if (finalStatus === 'Unpaid') {
+      finalAmountPaid = 0;
+    }
+
+    let finalDueAmount = calculatedAmount - finalAmountPaid;
+    if (finalDueAmount < 0) finalDueAmount = 0;
+
+    if (finalDueAmount === 0) {
+      finalStatus = 'Paid';
+    } else if (finalAmountPaid > 0 && finalDueAmount > 0) {
+      finalStatus = 'Partially Paid';
+    }
+
     const bill = await Billing.create({
       patient: patientId,
       amount: calculatedAmount,
-      amountPaid: amountPaid !== undefined ? Number(amountPaid) : 0,
-      dueAmount: dueAmount !== undefined ? Number(dueAmount) : calculatedAmount,
+      amountPaid: finalAmountPaid,
+      dueAmount: finalDueAmount,
       treatment: calculatedTreatment,
-      status: status || 'Unpaid',
+      status: finalStatus,
       paymentMethod: paymentMethod || 'N/A',
       dentist: dentistId || null,
       items: items || [],
@@ -563,11 +581,34 @@ export const updateBill = async (req, res) => {
       if (treatment !== undefined) bill.treatment = treatment;
     }
 
-    if (status !== undefined) bill.status = status;
+    let finalAmountPaid = amountPaid !== undefined ? Number(amountPaid) : bill.amountPaid;
+    let finalStatus = status !== undefined ? status : bill.status;
+
+    // Synchronize statuses if amountPaid is not provided but status is updated
+    if (status !== undefined && amountPaid === undefined) {
+      if (finalStatus === 'Paid') {
+        finalAmountPaid = bill.amount;
+      } else if (finalStatus === 'Unpaid') {
+        finalAmountPaid = 0;
+      }
+    }
+
+    let finalDueAmount = bill.amount - finalAmountPaid;
+    if (finalDueAmount < 0) finalDueAmount = 0;
+
+    if (finalDueAmount === 0) {
+      finalStatus = 'Paid';
+    } else if (finalAmountPaid > 0 && finalDueAmount > 0) {
+      finalStatus = 'Partially Paid';
+    } else if (finalAmountPaid === 0) {
+      finalStatus = 'Unpaid';
+    }
+
+    bill.amountPaid = finalAmountPaid;
+    bill.dueAmount = finalDueAmount;
+    bill.status = finalStatus;
     if (paymentMethod !== undefined) bill.paymentMethod = paymentMethod;
     if (dentistId !== undefined) bill.dentist = dentistId || null;
-    if (amountPaid !== undefined) bill.amountPaid = Number(amountPaid);
-    if (dueAmount !== undefined) bill.dueAmount = Number(dueAmount);
 
     await bill.save();
 

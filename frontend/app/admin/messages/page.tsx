@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import DentistSidebar from "@/components/dentist/Sidebar";
+import Sidebar from "@/components/admin/Sidebar";
 import ChatWindow from "@/components/ChatWindow";
 import { MessageSquare, Search } from "lucide-react";
 
@@ -21,7 +21,7 @@ interface Contact {
   model: string;
 }
 
-export default function DentistMessagesPage() {
+export default function AdminMessagesPage() {
   const router = useRouter();
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -39,21 +39,21 @@ export default function DentistMessagesPage() {
       const storedUser = localStorage.getItem("user");
 
       if (!token || !storedUser) {
-        router.push("/login");
+        router.push("/admin/login");
         return;
       }
 
       try {
         const parsedUser: UserProfile = JSON.parse(storedUser);
-        if (parsedUser.role !== "dentist") {
-          router.push("/admin/dashboard");
+        if (parsedUser.role !== "system_admin" && parsedUser.role !== "assistant" && parsedUser.role !== "admin") {
+          router.push("/admin/login");
           return;
         }
         setUser(parsedUser);
         setLoading(false);
       } catch (err) {
         console.error("Error parsing user profile:", err);
-        router.push("/login");
+        router.push("/admin/login");
       }
     }
   }, [router]);
@@ -112,18 +112,18 @@ export default function DentistMessagesPage() {
       .join("")
       .toUpperCase()
       .substring(0, 2)
-    : "DR";
+    : "ST";
 
   return (
     <div className="flex min-h-screen bg-slate-50">
-      <DentistSidebar />
+      <Sidebar />
 
       <main className="flex-1 p-8 ml-64 min-h-screen flex flex-col">
         {/* Header */}
         <header className="flex items-center justify-between mb-8 flex-shrink-0">
           <div>
             <h2 className="text-3xl font-black text-slate-900">Messages</h2>
-            <p className="text-slate-500 mt-1">Communicate with patients, assistants, and other clinic staff members</p>
+            <p className="text-slate-500 mt-1">Communicate with patients, dentists, and other clinic staff members</p>
           </div>
 
           <div className="flex items-center gap-4">
@@ -191,7 +191,7 @@ export default function DentistMessagesPage() {
                 <MessageSquare className="text-slate-350 mb-4" size={48} />
                 <h3 className="text-xl font-bold text-slate-900 mb-1">Select a Conversation</h3>
                 <p className="text-slate-500 text-sm max-w-sm">
-                  Choose a patient or staff member from the contact list to start messaging in real-time.
+                  Choose a patient or dentist from the contact list to start messaging in real-time.
                 </p>
               </div>
             )}

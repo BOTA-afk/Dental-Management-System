@@ -5,7 +5,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
   Image,
   ActivityIndicator,
   RefreshControl,
@@ -13,9 +12,10 @@ import {
   FlatList,
   Alert,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { useAuth } from '../context/auth';
+import { useAuth } from '../../context/auth';
 
 interface Appointment {
   _id: string;

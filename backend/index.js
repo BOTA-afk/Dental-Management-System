@@ -7,6 +7,9 @@ import patientRoutes from "./routes/patientRoutes.js";
 import path from "path";
 import { fileURLToPath } from "url";
 import { getTokensFromCode } from "./utils/googleCalendarService.js";
+import { createServer } from "http";
+import { initSocket } from "./socket.js";
+import messageRoutes from "./routes/messageRoutes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -58,6 +61,7 @@ app.get("/oauth2callback", async (req, res) => {
 
 app.use("/api/admin", adminRoutes);
 app.use("/api/patient", patientRoutes);
+app.use("/api/messages", messageRoutes);
 
 // MongoDB Connection
 const connectDB = async () => {
@@ -84,8 +88,10 @@ const startServer = async () => {
   await connectDB();
 
   const PORT = process.env.PORT || 5000;
+  const server = createServer(app);
+  initSocket(server);
 
-  app.listen(PORT, () => {
+  server.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
   });
 };

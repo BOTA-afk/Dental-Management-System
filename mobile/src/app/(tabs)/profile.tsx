@@ -6,11 +6,11 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   ScrollView,
-  SafeAreaView,
   TextInput,
   Alert,
 } from 'react-native';
-import { useAuth } from '../context/auth';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAuth } from '../../context/auth';
 import { Ionicons } from '@expo/vector-icons';
 
 interface PatientProfile {
