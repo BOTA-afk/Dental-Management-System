@@ -14,7 +14,8 @@ import {
   FileText, 
   User,
   Lock,
-  LogOut
+  LogOut,
+  ClipboardList
 } from 'lucide-react';
 import ChangePasswordModal from '@/components/ChangePasswordModal';
 
@@ -54,6 +55,7 @@ export default function DentistSidebar() {
     { title: "X-rays & Docs", href: "/dentist/x-rays", icon: FileHeart },
     { title: "Billing", href: "/dentist/billing", icon: CreditCard },
     { title: "Messages", href: "/dentist/messages", icon: MessageSquare },
+    { title: "Supply Request", href: "/dentist/supply", icon: ClipboardList },
     { title: "My Profile", href: "/dentist/profile", icon: User },
   ];
 

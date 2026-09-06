@@ -15,11 +15,19 @@ export const initSocket = (server) => {
   io.on('connection', (socket) => {
     console.log(`🔌 Socket connected: ${socket.id}`);
 
-    socket.on('register', (userId) => {
+    socket.on('register', (data) => {
+      // support both raw userId string and object { userId, role }
+      const userId = typeof data === 'object' && data !== null ? data.userId : data;
+      const role = typeof data === 'object' && data !== null ? data.role : null;
+
       if (userId) {
         userSockets.set(userId, socket.id);
         socket.join(userId);
         console.log(`👤 User registered: ${userId} to socket ${socket.id}`);
+      }
+      if (role) {
+        socket.join(role);
+        console.log(`👤 Socket ${socket.id} joined role room: ${role}`);
       }
     });
 
@@ -68,3 +76,31 @@ export const getIO = () => {
   }
   return io;
 };
+
+/**
+ * Sends a real-time notification to the target recipient(s) over sockets.
+ */
+export const sendRealTimeNotification = (notification) => {
+  try {
+    if (!io) {
+      console.warn("Socket.io not initialized. Skipping real-time emission.");
+      return;
+    }
+    
+    // Format JSON representation for client consumption
+    const payload = typeof notification.toJSON === 'function' ? notification.toJSON() : notification;
+
+    if (payload.recipientId) {
+      io.to(payload.recipientId.toString()).emit('newNotification', payload);
+    }
+    if (payload.dentist) {
+      io.to(payload.dentist.toString()).emit('newNotification', payload);
+    }
+    if (payload.recipientRole) {
+      io.to(payload.recipientRole).emit('newNotification', payload);
+    }
+  } catch (err) {
+    console.error('❌ Error sending real-time notification:', err);
+  }
+};
+

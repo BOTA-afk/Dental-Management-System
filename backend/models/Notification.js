@@ -11,6 +11,16 @@ const notificationSchema = new mongoose.Schema({
     ref: 'User',
     required: false
   },
+  recipientId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: false
+  },
+  recipientRole: {
+    type: String,
+    enum: ['admin', 'assistant', 'dentist', 'patient', 'all'],
+    required: false
+  },
   title: {
     type: String,
     required: true
@@ -21,7 +31,7 @@ const notificationSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['booking', 'reschedule', 'cancel', 'billing', 'general'],
+    enum: ['booking', 'reschedule', 'cancel', 'billing', 'general', 'low_stock', 'task'],
     required: true
   },
   read: {
@@ -29,5 +39,14 @@ const notificationSchema = new mongoose.Schema({
     default: false
   }
 }, { timestamps: true });
+
+notificationSchema.post('save', async function(doc) {
+  try {
+    const { sendRealTimeNotification } = await import('../socket.js');
+    sendRealTimeNotification(doc);
+  } catch (err) {
+    console.error("Error sending real-time notification in post-save:", err);
+  }
+});
 
 export default mongoose.models.Notification || mongoose.model('Notification', notificationSchema);

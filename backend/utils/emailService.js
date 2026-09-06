@@ -451,3 +451,152 @@ export const sendTempPasswordEmail = async (email, name, tempPassword) => {
     return { success: true, message: 'Temp password logged to server console (SMTP failed).' };
   }
 };
+
+/**
+ * Sends a formal procurement purchase order to a supplier requesting item delivery within 5 days.
+ */
+export const sendSupplierOrderEmail = async ({
+  supplierEmail,
+  supplierName,
+  itemName,
+  quantity,
+  unit,
+  orderDate = new Date(),
+  expectedDeliveryDate,
+  notes = '',
+  requestedByName = 'Clinic Inventory Staff'
+}) => {
+  const emailUser = process.env.EMAIL_USER;
+  const emailPass = process.env.EMAIL_PASS;
+
+  const formattedOrderDate = new Date(orderDate).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+
+  const formattedDeadlineDate = new Date(expectedDeliveryDate).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+
+  if (!emailUser || !emailPass) {
+    console.log('\n=========================================');
+    console.log(`📦 [DEVELOPMENT SUPPLIER ORDER EMAIL]`);
+    console.log(`To Supplier: ${supplierName} <${supplierEmail}>`);
+    console.log(`Requested Item: ${quantity} ${unit} of ${itemName}`);
+    console.log(`Order Date: ${formattedOrderDate}`);
+    console.log(`⚠️ REQUIRED DELIVERY: WITHIN 5 DAYS (by ${formattedDeadlineDate})`);
+    console.log(`Notes: ${notes || 'Standard restocking replenishment'}`);
+    console.log('=========================================\n');
+    return { success: true, message: 'Supplier order logged to server console (development mode).' };
+  }
+
+  try {
+    const cleanPass = emailPass.replace(/[\s\u00a0]/g, '');
+
+    let transportConfig = {
+      auth: {
+        user: emailUser,
+        pass: cleanPass,
+      },
+    };
+
+    if (process.env.EMAIL_HOST && process.env.EMAIL_HOST.toLowerCase().includes('gmail')) {
+      transportConfig.service = 'gmail';
+    } else {
+      transportConfig.host = process.env.EMAIL_HOST;
+      transportConfig.port = parseInt(process.env.EMAIL_PORT || '587');
+      transportConfig.secure = process.env.EMAIL_PORT === '465';
+      transportConfig.tls = {
+        rejectUnauthorized: false,
+      };
+    }
+
+    const transporter = nodemailer.createTransport(transportConfig);
+
+    const mailOptions = {
+      from: `"DentCare Clinic Procurement" <${emailUser}>`,
+      to: supplierEmail,
+      subject: `DentCare Clinic Supply Order: ${itemName} - Delivery Required Within 5 Days`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 650px; margin: auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
+          <div style="text-align: center; border-bottom: 2px solid #0ea5e9; padding-bottom: 16px; margin-bottom: 20px;">
+            <h2 style="color: #0ea5e9; margin: 0; font-size: 24px;">DentCare Dental Clinic</h2>
+            <p style="color: #64748b; margin: 4px 0 0 0; font-size: 14px;">Clinical Supplies & Store Management Department</p>
+          </div>
+
+          <p style="font-size: 15px; color: #1e293b;">Dear <strong>${supplierName}</strong>,</p>
+          
+          <p style="font-size: 14px; color: #334155; line-height: 1.6;">
+            We have generated a formal supply procurement order for our clinical stock. 
+            Because this item is critical for ongoing patient treatments, 
+            <strong style="color: #dc2626;">delivery is requested within 5 business days (by ${formattedDeadlineDate})</strong>.
+          </p>
+
+          <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 18px; margin: 20px 0;">
+            <h3 style="color: #0f172a; margin-top: 0; margin-bottom: 12px; font-size: 16px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">Order Details</h3>
+            <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+              <tr>
+                <td style="padding: 6px 0; color: #64748b; width: 160px; font-weight: bold;">Item Name:</td>
+                <td style="padding: 6px 0; color: #0f172a; font-weight: bold;">${itemName}</td>
+              </tr>
+              <tr>
+                <td style="padding: 6px 0; color: #64748b; font-weight: bold;">Quantity Requested:</td>
+                <td style="padding: 6px 0; color: #0284c7; font-weight: bold; font-size: 16px;">${quantity} ${unit}</td>
+              </tr>
+              <tr>
+                <td style="padding: 6px 0; color: #64748b; font-weight: bold;">Order Date:</td>
+                <td style="padding: 6px 0; color: #0f172a;">${formattedOrderDate}</td>
+              </tr>
+              <tr>
+                <td style="padding: 6px 0; color: #64748b; font-weight: bold;">Required Delivery:</td>
+                <td style="padding: 6px 0; color: #dc2626; font-weight: bold;">Within 5 Days (on or before ${formattedDeadlineDate})</td>
+              </tr>
+              <tr>
+                <td style="padding: 6px 0; color: #64748b; font-weight: bold;">Requested By:</td>
+                <td style="padding: 6px 0; color: #0f172a;">${requestedByName}</td>
+              </tr>
+              ${notes ? `
+              <tr>
+                <td style="padding: 6px 0; color: #64748b; font-weight: bold; vertical-align: top;">Instructions / Notes:</td>
+                <td style="padding: 6px 0; color: #334155; font-style: italic;">${notes}</td>
+              </tr>` : ''}
+            </table>
+          </div>
+
+          <div style="background-color: #fef2f2; border-left: 4px solid #ef4444; padding: 12px 16px; margin-bottom: 20px; border-radius: 4px;">
+            <p style="margin: 0; font-size: 13px; color: #991b1b;">
+              <strong>Delivery Timeline Notice:</strong> Please confirm receipt of this order and reply to this email if there is any delay preventing delivery within the 5-day window.
+            </p>
+          </div>
+
+          <div style="font-size: 13px; color: #64748b; line-height: 1.5;">
+            <p style="margin: 0;"><strong>Delivery Destination:</strong> DentCare Dental Clinic, 123 Healthcare Way, Medical District.</p>
+            <p style="margin: 4px 0 0 0;">For delivery coordination or inquiries, contact clinic staff at <strong>+94 11 234 5678</strong>.</p>
+          </div>
+
+          <hr style="border: 0; border-top: 1px solid #e2e8f0; margin-top: 24px; margin-bottom: 16px;"/>
+          <p style="font-size: 12px; color: #94a3b8; text-align: center; margin: 0;">
+            This is an automated procurement order notification issued by DentCare Dental Management System.
+          </p>
+        </div>
+      `
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`✉️ Supplier order email sent to ${supplierEmail}: ${info.messageId}`);
+    return { success: true, message: 'Supplier order email sent successfully.' };
+  } catch (error) {
+    console.error('❌ Error sending supplier order email:', error);
+    console.log('\n=========================================');
+    console.log(`📦 [FALLBACK SUPPLIER ORDER EMAIL LOG] (SMTP issue)`);
+    console.log(`Supplier: ${supplierName} <${supplierEmail}>`);
+    console.log(`Item: ${quantity} ${unit} of ${itemName}`);
+    console.log(`Required Delivery: Within 5 days (by ${formattedDeadlineDate})`);
+    console.log('=========================================\n');
+    return { success: true, message: 'Supplier order logged to console (SMTP fallback).' };
+  }
+};
+

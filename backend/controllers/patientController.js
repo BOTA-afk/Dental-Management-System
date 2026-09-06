@@ -305,6 +305,13 @@ export const createAppointment = async (req, res) => {
         type: 'booking'
       });
 
+      await Notification.create({
+        title: "New Appointment Booked",
+        message: `A new appointment for ${treatment} with Dr. ${populatedAppt.dentist?.fullName || 'N/A'} has been booked by patient ${populatedAppt.patient?.name || 'N/A'} on ${date} at ${time}.`,
+        type: 'booking',
+        recipientRole: 'assistant'
+      });
+
       if (dentist) {
         await Notification.create({
           dentist: dentist,

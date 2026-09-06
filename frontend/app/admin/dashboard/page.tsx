@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/admin/Sidebar";
-import { AlertTriangle, Search } from "lucide-react";
+import Header from "@/components/admin/Header";
+import { AlertTriangle } from "lucide-react";
 
 interface UserProfile {
   id: string;
@@ -128,35 +129,11 @@ export default function Dashboard() {
 
       {/* Main */}
       <main className="flex-1 p-8 md:ml-64">
-        {/* Header */}
-        <header className="flex items-center justify-between mb-8">
-          <div>
-            <h2 className="text-3xl font-bold text-slate-900">
-              Welcome back, {user?.fullName || "User"}
-            </h2>
-
-            <p className="text-slate-500 mt-1">Here's what's happening today.</p>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <div className="relative">
-              <Search
-                size={18}
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-              />
-
-              <input
-                type="text"
-                placeholder="Search..."
-                className="pl-11 pr-4 py-2.5 w-72 rounded-full border border-slate-300 bg-white text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            <div className="w-11 h-11 rounded-full bg-blue-700 text-white font-bold flex items-center justify-center shadow">
-              {userInitials}
-            </div>
-          </div>
-        </header>
+        <Header 
+          title={`Welcome back, ${user?.fullName || "User"}`} 
+          subtitle="Here's what's happening today." 
+          showSearch={true}
+        />
 
         {/* Stats */}
         <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
