@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Calendar, User, Phone, Mail, FileText, MapPin, X, Clock, HelpCircle, Check, AlertCircle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Calendar, User, Phone, Mail, FileText, MapPin, X, Clock, HelpCircle, Check, AlertCircle, Pill } from 'lucide-react';
+import IssuePrescriptionModal from '@/components/dentist/IssuePrescriptionModal';
 
 interface Patient {
   _id: string;
@@ -41,8 +43,10 @@ interface PatientDetailsModalProps {
 }
 
 export default function PatientDetailsModal({ isOpen, onClose, patient }: PatientDetailsModalProps) {
+  const router = useRouter();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(false);
+  const [isPrescriptionOpen, setIsPrescriptionOpen] = useState(false);
 
   useEffect(() => {
     if (!isOpen || !patient) return;
@@ -303,16 +307,53 @@ export default function PatientDetailsModal({ isOpen, onClose, patient }: Patien
         </div>
 
         {/* Modal Actions */}
-        <div className="flex justify-end gap-3 pt-6 mt-6 border-t border-slate-100">
+        <div className="flex flex-wrap justify-between items-center gap-3 pt-6 mt-6 border-t border-slate-100">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsPrescriptionOpen(true)}
+              className="px-4 py-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-600 hover:text-white text-emerald-700 font-bold transition cursor-pointer text-xs flex items-center gap-1.5 shadow-xs"
+            >
+              <Pill size={14} /> + Issue Prescription
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                router.push(`/dentist/treatments?patientId=${patient._id}`);
+              }}
+              className="px-4 py-2.5 rounded-xl bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-700 font-bold transition cursor-pointer text-xs flex items-center gap-1.5 shadow-xs"
+            >
+              + Add Treatment Plan
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                router.push(`/dentist/x-rays?patientId=${patient._id}`);
+              }}
+              className="px-4 py-2.5 rounded-xl bg-violet-50 hover:bg-violet-600 hover:text-white text-violet-700 font-bold transition cursor-pointer text-xs flex items-center gap-1.5 shadow-xs"
+            >
+              + Upload X-Ray
+            </button>
+          </div>
           <button 
             type="button"
             onClick={onClose} 
-            className="px-6 py-3 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 font-bold transition cursor-pointer text-sm"
+            className="px-6 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 font-bold transition cursor-pointer text-sm"
           >
             Close
           </button>
         </div>
       </div>
+
+      {/* Issue Prescription Modal inside Patient Details */}
+      <IssuePrescriptionModal
+        isOpen={isPrescriptionOpen}
+        onClose={() => setIsPrescriptionOpen(false)}
+        patients={patient ? [patient] : []}
+        preselectedPatient={patient}
+      />
     </div>
   );
 }

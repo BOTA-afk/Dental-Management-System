@@ -252,6 +252,12 @@ export default function HomeScreen() {
               onPress={() => {
                 if (item.name === 'Payments') {
                   router.push('/payments' as any);
+                } else if (item.name.includes('Treatment')) {
+                  router.push('/treatment-plans' as any);
+                } else if (item.name.includes('X-rays')) {
+                  router.push('/x-rays' as any);
+                } else if (item.name.includes('Prescr')) {
+                  router.push('/prescriptions' as any);
                 } else {
                   Alert.alert('Info', `${item.name.replace('\n', ' ')} feature is available in the Web Portal.`);
                 }

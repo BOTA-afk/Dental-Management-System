@@ -6,10 +6,14 @@ import Admin from '../models/Admin.js';
 import User from "../models/User.js";
 import Patient from '../models/Patient.js';
 import Appointment from '../models/Appointment.js';
-import { generateAppointmentReceiptPdf, generateBillingReceiptPdf } from '../utils/pdfGenerator.js';
-import { sendAppointmentConfirmationEmail, sendPatientWelcomeEmail, sendBillingReceiptEmail, sendTempPasswordEmail } from '../utils/emailService.js';
+import { generateAppointmentReceiptPdf, generateBillingReceiptPdf, generatePrescriptionPdf } from '../utils/pdfGenerator.js';
+import { sendAppointmentConfirmationEmail, sendPatientWelcomeEmail, sendBillingReceiptEmail, sendTempPasswordEmail, sendPrescriptionEmail } from '../utils/emailService.js';
 import Notification from '../models/Notification.js';
 import Billing from '../models/Billing.js';
+import TreatmentPlan from '../models/TreatmentPlan.js';
+import XRayRecord from '../models/XRayRecord.js';
+import Prescription from '../models/Prescription.js';
+import { sendRealTimeNotification } from '../socket.js';
 import { addToGoogleCalendar } from '../utils/googleCalendarService.js';
 
 
@@ -999,5 +1003,467 @@ export const updateStaffProfile = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: "Server error updating profile: " + error.message });
+  }
+};
+
+
+// --- DOCTOR TREATMENT PLANS ---
+
+// GET /api/admin/treatment-plans
+export const getTreatmentPlans = async (req, res) => {
+  const { patientId, dentistId, status, search } = req.query;
+  try {
+    const filter = {};
+    if (patientId) filter.patient = patientId;
+    if (dentistId) filter.dentist = dentistId;
+    if (status) filter.status = status;
+    if (search) {
+      filter.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { diagnosis: { $regex: search, $options: 'i' } },
+        { treatmentPlan: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    const plans = await TreatmentPlan.find(filter)
+      .populate('patient', 'name email phoneNumber dob gender allergies')
+      .populate('dentist', 'fullName email phoneNumber')
+      .sort({ createdAt: -1 });
+
+    res.json(plans);
+  } catch (error) {
+    res.status(500).json({ message: "Server error fetching treatment plans", error: error.message });
+  }
+};
+
+// POST /api/admin/treatment-plans
+export const createTreatmentPlan = async (req, res) => {
+  const {
+    patientId,
+    dentistId,
+    title,
+    diagnosis,
+    treatmentPlan,
+    treatmentDone,
+    status,
+    estimatedCost,
+    startDate,
+    targetDate,
+    notes
+  } = req.body;
+
+  try {
+    if (!patientId || !title || !treatmentPlan) {
+      return res.status(400).json({ message: "Patient, title, and treatment plan are required." });
+    }
+
+    // Default dentist to current logged-in user if not supplied
+    const effectiveDentistId = dentistId || req.user?.id;
+
+    const newPlan = await TreatmentPlan.create({
+      patient: patientId,
+      dentist: effectiveDentistId,
+      title: title.trim(),
+      diagnosis: diagnosis ? diagnosis.trim() : '',
+      treatmentPlan: treatmentPlan.trim(),
+      treatmentDone: treatmentDone ? treatmentDone.trim() : '',
+      status: status || 'In Progress',
+      estimatedCost: estimatedCost ? Number(estimatedCost) : 0,
+      startDate: startDate ? new Date(startDate) : new Date(),
+      targetDate: targetDate ? new Date(targetDate) : undefined,
+      notes: notes ? notes.trim() : ''
+    });
+
+    const populated = await TreatmentPlan.findById(newPlan._id)
+      .populate('patient', 'name email phoneNumber dob gender allergies')
+      .populate('dentist', 'fullName email phoneNumber');
+
+    // Notify patient
+    try {
+      const patientNotif = await Notification.create({
+        patient: patientId,
+        title: "New Treatment Plan Created",
+        message: `Dr. ${populated.dentist?.fullName || 'Your dentist'} has formulated a treatment plan: "${title}".`,
+        type: "general"
+      });
+      sendRealTimeNotification(patientNotif);
+    } catch (notifErr) {
+      console.error("Error creating notification for patient:", notifErr);
+    }
+
+    res.status(201).json(populated);
+  } catch (error) {
+    res.status(500).json({ message: "Server error creating treatment plan", error: error.message });
+  }
+};
+
+// PUT /api/admin/treatment-plans/:id
+export const updateTreatmentPlan = async (req, res) => {
+  const { id } = req.params;
+  const {
+    title,
+    diagnosis,
+    treatmentPlan,
+    treatmentDone,
+    status,
+    estimatedCost,
+    targetDate,
+    completedDate,
+    notes
+  } = req.body;
+
+  try {
+    const plan = await TreatmentPlan.findById(id);
+    if (!plan) {
+      return res.status(404).json({ message: "Treatment plan not found" });
+    }
+
+    if (title) plan.title = title.trim();
+    if (diagnosis !== undefined) plan.diagnosis = diagnosis.trim();
+    if (treatmentPlan) plan.treatmentPlan = treatmentPlan.trim();
+    if (treatmentDone !== undefined) plan.treatmentDone = treatmentDone.trim();
+    if (estimatedCost !== undefined) plan.estimatedCost = Number(estimatedCost);
+    if (targetDate !== undefined) plan.targetDate = targetDate ? new Date(targetDate) : undefined;
+    if (notes !== undefined) plan.notes = notes.trim();
+
+    if (status) {
+      plan.status = status;
+      if (status === 'Completed' && !plan.completedDate) {
+        plan.completedDate = completedDate ? new Date(completedDate) : new Date();
+      }
+    }
+
+    const updated = await plan.save();
+    const populated = await TreatmentPlan.findById(updated._id)
+      .populate('patient', 'name email phoneNumber dob gender allergies')
+      .populate('dentist', 'fullName email phoneNumber');
+
+    // Notify patient of update
+    try {
+      const patientNotif = await Notification.create({
+        patient: plan.patient,
+        title: "Treatment Plan Updated",
+        message: `Your treatment plan "${plan.title}" has been updated by your doctor. Current status: ${plan.status}.`,
+        type: "general"
+      });
+      sendRealTimeNotification(patientNotif);
+    } catch (notifErr) {
+      console.error("Error sending update notification:", notifErr);
+    }
+
+    res.json(populated);
+  } catch (error) {
+    res.status(500).json({ message: "Server error updating treatment plan", error: error.message });
+  }
+};
+
+// DELETE /api/admin/treatment-plans/:id
+export const deleteTreatmentPlan = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const plan = await TreatmentPlan.findById(id);
+    if (!plan) {
+      return res.status(404).json({ message: "Treatment plan not found" });
+    }
+
+    await plan.deleteOne();
+    res.json({ message: "Treatment plan deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error deleting treatment plan", error: error.message });
+  }
+};
+
+
+// --- DOCTOR X-RAYS & DIAGNOSTIC IMAGING ---
+
+// GET /api/admin/xrays
+export const getXRays = async (req, res) => {
+  const { patientId, category, search } = req.query;
+  try {
+    const filter = {};
+    if (patientId) filter.patient = patientId;
+    if (category && category !== 'All') filter.category = category;
+    if (search) {
+      filter.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { findings: { $regex: search, $options: 'i' } },
+        { notes: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    const records = await XRayRecord.find(filter)
+      .populate('patient', 'name email phoneNumber dob gender')
+      .populate('dentist', 'fullName email')
+      .sort({ date: -1, createdAt: -1 });
+
+    res.json(records);
+  } catch (error) {
+    res.status(500).json({ message: "Server error fetching X-rays", error: error.message });
+  }
+};
+
+// POST /api/admin/xrays
+export const createXRay = async (req, res) => {
+  const {
+    patientId,
+    dentistId,
+    title,
+    category,
+    imageUrl,
+    date,
+    findings,
+    notes
+  } = req.body;
+
+  try {
+    if (!patientId || !title || !imageUrl) {
+      return res.status(400).json({ message: "Patient, title, and X-ray image are required." });
+    }
+
+    const effectiveDentistId = dentistId || req.user?.id;
+
+    const newRecord = await XRayRecord.create({
+      patient: patientId,
+      dentist: effectiveDentistId,
+      title: title.trim(),
+      category: category || 'Panoramic',
+      imageUrl,
+      date: date ? new Date(date) : new Date(),
+      findings: findings ? findings.trim() : '',
+      notes: notes ? notes.trim() : ''
+    });
+
+    const populated = await XRayRecord.findById(newRecord._id)
+      .populate('patient', 'name email phoneNumber dob gender')
+      .populate('dentist', 'fullName email');
+
+    // Notify patient
+    try {
+      const patientNotif = await Notification.create({
+        patient: patientId,
+        title: "New X-Ray Record Added",
+        message: `Dr. ${populated.dentist?.fullName || 'Your dentist'} has added a ${category || 'diagnostic'} X-ray to your patient records.`,
+        type: "general"
+      });
+      sendRealTimeNotification(patientNotif);
+    } catch (notifErr) {
+      console.error("Error creating X-ray notification:", notifErr);
+    }
+
+    res.status(201).json(populated);
+  } catch (error) {
+    res.status(500).json({ message: "Server error creating X-ray record", error: error.message });
+  }
+};
+
+// PUT /api/admin/xrays/:id
+export const updateXRay = async (req, res) => {
+  const { id } = req.params;
+  const { title, category, imageUrl, date, findings, notes } = req.body;
+
+  try {
+    const record = await XRayRecord.findById(id);
+    if (!record) {
+      return res.status(404).json({ message: "X-ray record not found" });
+    }
+
+    if (title) record.title = title.trim();
+    if (category) record.category = category;
+    if (imageUrl) record.imageUrl = imageUrl;
+    if (date) record.date = new Date(date);
+    if (findings !== undefined) record.findings = findings.trim();
+    if (notes !== undefined) record.notes = notes.trim();
+
+    const updated = await record.save();
+    const populated = await XRayRecord.findById(updated._id)
+      .populate('patient', 'name email phoneNumber dob gender')
+      .populate('dentist', 'fullName email');
+
+    res.json(populated);
+  } catch (error) {
+    res.status(500).json({ message: "Server error updating X-ray record", error: error.message });
+  }
+};
+
+// DELETE /api/admin/xrays/:id
+export const deleteXRay = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const record = await XRayRecord.findById(id);
+    if (!record) {
+      return res.status(404).json({ message: "X-ray record not found" });
+    }
+
+    await record.deleteOne();
+    res.json({ message: "X-ray record deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error deleting X-ray record", error: error.message });
+  }
+};
+
+// --- PRESCRIPTIONS MANAGEMENT ---
+
+// GET /api/admin/prescriptions
+export const getPrescriptions = async (req, res) => {
+  const { patientId } = req.query;
+  try {
+    const filter = patientId ? { patient: patientId } : {};
+    const prescriptions = await Prescription.find(filter)
+      .populate('patient', 'name email phoneNumber dob gender allergies nic')
+      .populate('dentist', 'fullName email phoneNumber')
+      .sort({ date: -1, createdAt: -1 });
+
+    res.json(prescriptions);
+  } catch (error) {
+    res.status(500).json({ message: "Server error fetching prescriptions", error: error.message });
+  }
+};
+
+// POST /api/admin/prescriptions
+export const createPrescription = async (req, res) => {
+  const {
+    patientId,
+    dentistId,
+    date,
+    diagnosis,
+    medications,
+    notes,
+    status
+  } = req.body;
+
+  try {
+    if (!patientId || !diagnosis || !medications || !Array.isArray(medications) || medications.length === 0) {
+      return res.status(400).json({ message: "Patient, diagnosis, and at least one medication are required." });
+    }
+
+    const effectiveDentistId = dentistId || req.user?.id;
+
+    const newPrescription = await Prescription.create({
+      patient: patientId,
+      dentist: effectiveDentistId,
+      date: date ? new Date(date) : new Date(),
+      diagnosis: diagnosis.trim(),
+      medications: medications.map((m) => ({
+        name: m.name.trim(),
+        dosage: m.dosage.trim(),
+        frequency: m.frequency.trim(),
+        duration: m.duration.trim(),
+        instructions: m.instructions ? m.instructions.trim() : ""
+      })),
+      notes: notes ? notes.trim() : "",
+      status: status || "Active"
+    });
+
+    const populated = await Prescription.findById(newPrescription._id)
+      .populate('patient', 'name email phoneNumber dob gender allergies nic')
+      .populate('dentist', 'fullName email phoneNumber');
+
+    // Notify patient
+    try {
+      const patientNotif = await Notification.create({
+        patient: patientId,
+        title: "New Prescription Issued",
+        message: `Dr. ${populated.dentist?.fullName || 'Your dentist'} has issued a new prescription for: "${diagnosis}".`,
+        type: "general"
+      });
+      sendRealTimeNotification(patientNotif);
+    } catch (notifErr) {
+      console.error("Error creating notification for patient:", notifErr);
+    }
+
+    // Send official prescription email with attached PDF to the patient
+    if (populated.patient?.email) {
+      try {
+        const pdfBuffer = await generatePrescriptionPdf(populated.patient.name, populated);
+        await sendPrescriptionEmail(populated.patient.email, populated.patient.name, populated, pdfBuffer);
+      } catch (emailErr) {
+        console.error("Error sending prescription email to patient:", emailErr);
+      }
+    }
+
+    res.status(201).json(populated);
+  } catch (error) {
+    res.status(500).json({ message: "Server error creating prescription", error: error.message });
+  }
+};
+
+// PUT /api/admin/prescriptions/:id
+export const updatePrescription = async (req, res) => {
+  const { id } = req.params;
+  const { diagnosis, medications, notes, status } = req.body;
+
+  try {
+    const prescription = await Prescription.findById(id);
+    if (!prescription) {
+      return res.status(404).json({ message: "Prescription not found" });
+    }
+
+    if (diagnosis) prescription.diagnosis = diagnosis.trim();
+    if (medications && Array.isArray(medications) && medications.length > 0) {
+      prescription.medications = medications.map((m) => ({
+        name: m.name.trim(),
+        dosage: m.dosage.trim(),
+        frequency: m.frequency.trim(),
+        duration: m.duration.trim(),
+        instructions: m.instructions ? m.instructions.trim() : ""
+      }));
+    }
+    if (notes !== undefined) prescription.notes = notes.trim();
+    if (status) prescription.status = status;
+
+    const updated = await prescription.save();
+    const populated = await Prescription.findById(updated._id)
+      .populate('patient', 'name email phoneNumber dob gender allergies nic')
+      .populate('dentist', 'fullName email phoneNumber');
+
+    res.json(populated);
+  } catch (error) {
+    res.status(500).json({ message: "Server error updating prescription", error: error.message });
+  }
+};
+
+// DELETE /api/admin/prescriptions/:id
+export const deletePrescription = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const prescription = await Prescription.findById(id);
+    if (!prescription) {
+      return res.status(404).json({ message: "Prescription not found" });
+    }
+
+    await prescription.deleteOne();
+    res.json({ message: "Prescription deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error deleting prescription", error: error.message });
+  }
+};
+
+// POST /api/admin/prescriptions/:id/send-email
+export const sendPrescriptionEmailToPatient = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const prescription = await Prescription.findById(id)
+      .populate('patient', 'name email phoneNumber dob gender allergies nic')
+      .populate('dentist', 'fullName email phoneNumber');
+
+    if (!prescription) {
+      return res.status(404).json({ message: "Prescription not found" });
+    }
+
+    if (!prescription.patient?.email) {
+      return res.status(400).json({ message: "Patient does not have a registered email address." });
+    }
+
+    const pdfBuffer = await generatePrescriptionPdf(prescription.patient.name, prescription);
+    const result = await sendPrescriptionEmail(prescription.patient.email, prescription.patient.name, prescription, pdfBuffer);
+
+    res.json({
+      message: `Prescription email sent successfully to ${prescription.patient.email}`,
+      result
+    });
+  } catch (error) {
+    console.error("Error in sendPrescriptionEmailToPatient:", error);
+    res.status(500).json({ message: "Failed to send prescription email", error: error.message });
   }
 };

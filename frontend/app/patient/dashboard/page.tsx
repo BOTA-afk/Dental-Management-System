@@ -12,7 +12,9 @@ import {
   Bell,
   Search,
   Plus,
-  CreditCard
+  CreditCard,
+  Activity,
+  Film
 } from "lucide-react";
 import PatientSidebar from "@/components/patient/Sidebar";
 
@@ -361,22 +363,38 @@ export default function PatientDashboard() {
         {/* Overview dashboard */}
         <div>
           {/* Hero Cards */}
-          <div className="grid lg:grid-cols-3 gap-6 mb-8">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <div 
               onClick={() => setIsBookingOpen(true)}
-              className="bg-white border border-slate-200 rounded-3xl p-7 shadow-sm hover:shadow-md hover:scale-[1.01] transition duration-200 cursor-pointer"
+              className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm hover:shadow-md hover:scale-[1.01] transition duration-200 cursor-pointer"
             >
-              <CalendarDays className="mb-6 text-blue-600" size={34} />
-              <h3 className="text-xl font-bold text-slate-800">Book Appointment</h3>
-              <p className="text-slate-500 mt-2 text-sm font-semibold">Schedule your next dental visit.</p>
+              <CalendarDays className="mb-5 text-blue-600" size={32} />
+              <h3 className="text-lg font-bold text-slate-800">Book Appointment</h3>
+              <p className="text-slate-500 mt-1.5 text-xs font-semibold">Schedule your next dental visit.</p>
+            </div>
+            <div 
+              onClick={() => router.push("/patient/treatments")}
+              className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm hover:shadow-md hover:scale-[1.01] transition duration-200 cursor-pointer group"
+            >
+              <Activity className="mb-5 text-teal-600 group-hover:scale-110 transition" size={32} />
+              <h3 className="text-lg font-bold text-slate-800">Treatment Plans</h3>
+              <p className="text-slate-500 mt-1.5 text-xs font-semibold">Track your active plans & procedures.</p>
+            </div>
+            <div 
+              onClick={() => router.push("/patient/x-rays")}
+              className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm hover:shadow-md hover:scale-[1.01] transition duration-200 cursor-pointer group"
+            >
+              <Film className="mb-5 text-violet-600 group-hover:scale-110 transition" size={32} />
+              <h3 className="text-lg font-bold text-slate-800">X-Rays & Scans</h3>
+              <p className="text-slate-500 mt-1.5 text-xs font-semibold">View dental radiographs & findings.</p>
             </div>
             <div 
               onClick={() => setIsMedicalRecordsOpen(true)}
-              className="bg-white border border-slate-200 rounded-3xl p-7 shadow-sm hover:shadow-md hover:scale-[1.01] transition duration-200 cursor-pointer"
+              className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm hover:shadow-md hover:scale-[1.01] transition duration-200 cursor-pointer"
             >
-              <FileText className="mb-6 text-indigo-600" size={34} />
-              <h3 className="text-xl font-bold text-slate-800">Medical Records</h3>
-              <p className="text-slate-500 mt-2 text-sm font-semibold">Access all your dental records.</p>
+              <FileText className="mb-5 text-indigo-600" size={32} />
+              <h3 className="text-lg font-bold text-slate-800">Medical Records</h3>
+              <p className="text-slate-500 mt-1.5 text-xs font-semibold">Access past notes and allergies.</p>
             </div>
           </div>
 

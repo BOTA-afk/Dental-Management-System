@@ -16,7 +16,10 @@ import {
   getBills,
   payBill,
   createCheckoutSession,
-  getBookedSlots
+  getBookedSlots,
+  getPatientTreatmentPlans,
+  getPatientXRays,
+  getPatientPrescriptions
 } from '../controllers/patientController.js';
 import { verifyToken, isPatient } from '../middleware/authMiddleware.js';
 
@@ -45,5 +48,10 @@ router.put('/notifications/read', verifyToken, isPatient, markNotificationAsRead
 router.get('/billing', verifyToken, isPatient, getBills);
 router.post('/billing/:id/checkout-session', verifyToken, isPatient, createCheckoutSession);
 router.put('/billing/:id/pay', verifyToken, isPatient, payBill);
+
+// Treatment Plans, X-Rays & Prescriptions routes for Patients
+router.get('/treatment-plans', verifyToken, isPatient, getPatientTreatmentPlans);
+router.get('/xrays', verifyToken, isPatient, getPatientXRays);
+router.get('/prescriptions', verifyToken, isPatient, getPatientPrescriptions);
 
 export default router;

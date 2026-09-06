@@ -11,7 +11,9 @@ import {
   Bell, 
   UserCircle,
   Lock,
-  LogOut
+  LogOut,
+  Stethoscope,
+  FileHeart
 } from 'lucide-react';
 import ChangePasswordModal from '@/components/ChangePasswordModal';
 
@@ -51,6 +53,8 @@ export default function PatientSidebar() {
   const patientMenuItems = [
     { title: "Dashboard", href: "/patient/dashboard", icon: LayoutDashboard },
     { title: "My Appointments", href: "/patient/appointments", icon: CalendarDays },
+    { title: "Treatments", href: "/patient/treatments", icon: Stethoscope },
+    { title: "X-rays & Records", href: "/patient/x-rays", icon: FileHeart },
     { title: "Prescriptions", href: "/patient/prescriptions", icon: Pill },
     { title: "Billing & Balance", href: "/patient/billing", icon: CreditCard },
     { title: "Notifications", href: "/patient/notifications", icon: Bell, badge: unreadCount },

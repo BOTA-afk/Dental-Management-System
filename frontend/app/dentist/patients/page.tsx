@@ -4,10 +4,13 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import DentistSidebar from "@/components/dentist/Sidebar";
 import PatientDetailsModal from "@/components/PatientDetailsModal";
+import IssuePrescriptionModal from "@/components/dentist/IssuePrescriptionModal";
 import { 
   Users, 
   Search, 
-  Bell
+  Bell,
+  Pill,
+  Plus
 } from "lucide-react";
 
 interface UserProfile {
@@ -42,6 +45,10 @@ export default function DentistPatientsPage() {
   // Patient details modal state
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+
+  // Issue Prescription modal state
+  const [isPrescriptionOpen, setIsPrescriptionOpen] = useState(false);
+  const [prescriptionPatient, setPrescriptionPatient] = useState<Patient | null>(null);
 
   const fetchNotifications = async () => {
     try {
@@ -262,6 +269,15 @@ export default function DentistPatientsPage() {
               >
                 Search
               </button>
+              <button
+                onClick={() => {
+                  setPrescriptionPatient(null);
+                  setIsPrescriptionOpen(true);
+                }}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-xl text-sm transition shadow-sm cursor-pointer flex items-center gap-1.5 whitespace-nowrap"
+              >
+                <Pill size={16} /> + Issue Prescription
+              </button>
             </div>
           </div>
 
@@ -295,15 +311,41 @@ export default function DentistPatientsPage() {
                       <td className="p-4">{p.phoneNumber}</td>
                       <td className="p-4 text-xs text-slate-500">{p.email}</td>
                       <td className="p-4 text-right">
-                        <button
-                          onClick={() => {
-                            setSelectedPatient(p);
-                            setIsDetailsOpen(true);
-                          }}
-                          className="bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold px-3 py-1.5 rounded-xl text-xs transition cursor-pointer"
-                        >
-                          Details
-                        </button>
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={() => {
+                              setPrescriptionPatient(p);
+                              setIsPrescriptionOpen(true);
+                            }}
+                            className="bg-emerald-50 hover:bg-emerald-600 hover:text-white text-emerald-700 font-bold px-2.5 py-1.5 rounded-xl text-xs transition cursor-pointer whitespace-nowrap"
+                            title={`Issue Prescription for ${p.name}`}
+                          >
+                            + Rx
+                          </button>
+                          <button
+                            onClick={() => router.push(`/dentist/treatments?patientId=${p._id}`)}
+                            className="bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-700 font-bold px-2.5 py-1.5 rounded-xl text-xs transition cursor-pointer whitespace-nowrap"
+                            title={`Add Treatment Plan for ${p.name}`}
+                          >
+                            + Plan
+                          </button>
+                          <button
+                            onClick={() => router.push(`/dentist/x-rays?patientId=${p._id}`)}
+                            className="bg-violet-50 hover:bg-violet-600 hover:text-white text-violet-700 font-bold px-2.5 py-1.5 rounded-xl text-xs transition cursor-pointer whitespace-nowrap"
+                            title={`Upload X-Ray for ${p.name}`}
+                          >
+                            + X-Ray
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSelectedPatient(p);
+                              setIsDetailsOpen(true);
+                            }}
+                            className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-2.5 py-1.5 rounded-xl text-xs transition cursor-pointer whitespace-nowrap"
+                          >
+                            Details
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -322,6 +364,18 @@ export default function DentistPatientsPage() {
           setSelectedPatient(null);
         }}
         patient={selectedPatient}
+      />
+
+      {/* Issue Prescription Modal */}
+      <IssuePrescriptionModal
+        isOpen={isPrescriptionOpen}
+        onClose={() => {
+          setIsPrescriptionOpen(false);
+          setPrescriptionPatient(null);
+        }}
+        patients={patients}
+        preselectedPatient={prescriptionPatient}
+        onPrescriptionCreated={fetchData}
       />
     </div>
   );

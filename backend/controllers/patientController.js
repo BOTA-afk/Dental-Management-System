@@ -7,6 +7,9 @@ import Appointment from "../models/Appointment.js";
 import { generateAppointmentReceiptPdf, generateBillingReceiptPdf } from "../utils/pdfGenerator.js";
 import Notification from "../models/Notification.js";
 import Billing from "../models/Billing.js";
+import TreatmentPlan from "../models/TreatmentPlan.js";
+import XRayRecord from "../models/XRayRecord.js";
+import Prescription from "../models/Prescription.js";
 import Stripe from "stripe";
 
 export const registerPatient = async (req, res) => {
@@ -499,5 +502,38 @@ export const getBookedSlots = async (req, res) => {
     res.json(bookedSlots);
   } catch (error) {
     res.status(500).json({ message: "Server error fetching booked slots", error: error.message });
+  }
+};
+
+export const getPatientTreatmentPlans = async (req, res) => {
+  try {
+    const plans = await TreatmentPlan.find({ patient: req.user.id })
+      .populate('dentist', 'fullName email phoneNumber')
+      .sort({ createdAt: -1 });
+    res.json(plans);
+  } catch (error) {
+    res.status(500).json({ message: "Server error fetching patient treatment plans", error: error.message });
+  }
+};
+
+export const getPatientXRays = async (req, res) => {
+  try {
+    const records = await XRayRecord.find({ patient: req.user.id })
+      .populate('dentist', 'fullName email phoneNumber')
+      .sort({ date: -1, createdAt: -1 });
+    res.json(records);
+  } catch (error) {
+    res.status(500).json({ message: "Server error fetching patient X-rays", error: error.message });
+  }
+};
+
+export const getPatientPrescriptions = async (req, res) => {
+  try {
+    const prescriptions = await Prescription.find({ patient: req.user.id })
+      .populate('dentist', 'fullName email phoneNumber')
+      .sort({ date: -1, createdAt: -1 });
+    res.json(prescriptions);
+  } catch (error) {
+    res.status(500).json({ message: "Server error fetching patient prescriptions", error: error.message });
   }
 };

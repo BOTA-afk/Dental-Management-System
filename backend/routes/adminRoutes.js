@@ -23,7 +23,20 @@ import {
   getLatestClinicalDetails,
   checkInPatient,
   getStaffProfile,
-  updateStaffProfile
+  updateStaffProfile,
+  getTreatmentPlans,
+  createTreatmentPlan,
+  updateTreatmentPlan,
+  deleteTreatmentPlan,
+  getXRays,
+  createXRay,
+  updateXRay,
+  deleteXRay,
+  getPrescriptions,
+  createPrescription,
+  updatePrescription,
+  deletePrescription,
+  sendPrescriptionEmailToPatient
 } from "../controllers/adminController.js";
 import { verifyToken, isAdmin, isStaff, isAdminOrAssistant } from '../middleware/authMiddleware.js';
 import { getAuthUrl } from '../utils/googleCalendarService.js';
@@ -61,5 +74,24 @@ router.post('/billing', verifyToken, isStaff, createBill);
 router.put('/billing/:id', verifyToken, isStaff, updateBill);
 router.post('/billing/:id/checkout-session', verifyToken, isStaff, createAdminCheckoutSession);
 router.get('/billing/summary', verifyToken, isStaff, getBillingSummary);
+
+// Clinical Treatment Plans routes
+router.get('/treatment-plans', verifyToken, isStaff, getTreatmentPlans);
+router.post('/treatment-plans', verifyToken, isStaff, createTreatmentPlan);
+router.put('/treatment-plans/:id', verifyToken, isStaff, updateTreatmentPlan);
+router.delete('/treatment-plans/:id', verifyToken, isStaff, deleteTreatmentPlan);
+
+// Diagnostic X-Rays & Imaging routes
+router.get('/xrays', verifyToken, isStaff, getXRays);
+router.post('/xrays', verifyToken, isStaff, createXRay);
+router.put('/xrays/:id', verifyToken, isStaff, updateXRay);
+router.delete('/xrays/:id', verifyToken, isStaff, deleteXRay);
+
+// Prescriptions management routes
+router.get('/prescriptions', verifyToken, isStaff, getPrescriptions);
+router.post('/prescriptions', verifyToken, isStaff, createPrescription);
+router.put('/prescriptions/:id', verifyToken, isStaff, updatePrescription);
+router.delete('/prescriptions/:id', verifyToken, isStaff, deletePrescription);
+router.post('/prescriptions/:id/send-email', verifyToken, isStaff, sendPrescriptionEmailToPatient);
 
 export default router;

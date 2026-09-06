@@ -600,3 +600,180 @@ export const sendSupplierOrderEmail = async ({
   }
 };
 
+/**
+ * Sends an official digital prescription email with attached PDF to the patient.
+ */
+export const sendPrescriptionEmail = async (email, patientName, prescription, pdfBuffer) => {
+  const emailUser = process.env.EMAIL_USER;
+  const emailPass = process.env.EMAIL_PASS;
+
+  const docName = prescription.dentist?.fullName ? `Dr. ${prescription.dentist.fullName}` : 'Attending Dentist';
+  const rxRef = `RX-${prescription._id ? prescription._id.toString().substring(18).toUpperCase() : 'NEW'}`;
+  const formattedDate = new Date(prescription.date || new Date()).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+
+  if (!emailUser || !emailPass) {
+    console.log('\n=========================================');
+    console.log(`💊 [DEVELOPMENT PRESCRIPTION EMAIL]`);
+    console.log(`To Patient: ${patientName} <${email}>`);
+    console.log(`Prescribing Doctor: ${docName}`);
+    console.log(`Diagnosis: ${prescription.diagnosis}`);
+    console.log(`Prescription Ref: ${rxRef}`);
+    console.log(`Medications (${prescription.medications?.length || 0}):`);
+    (prescription.medications || []).forEach((m, idx) => {
+      console.log(`   ${idx + 1}. ${m.name} (${m.dosage}) - ${m.frequency} for ${m.duration} [${m.instructions || 'As directed'}]`);
+    });
+    if (prescription.notes) {
+      console.log(`Doctor Advice: ${prescription.notes}`);
+    }
+    console.log(`PDF Attachment: Simulated (Buffer size: ${pdfBuffer?.length || 0} bytes)`);
+    console.log('=========================================\n');
+    return { success: true, message: 'Prescription email logged to server console (development mode).' };
+  }
+
+  try {
+    const cleanPass = emailPass.replace(/[\s\u00a0]/g, '');
+
+    let transportConfig = {
+      auth: {
+        user: emailUser,
+        pass: cleanPass,
+      },
+    };
+
+    if (process.env.EMAIL_HOST && process.env.EMAIL_HOST.toLowerCase().includes('gmail')) {
+      transportConfig.service = 'gmail';
+    } else {
+      transportConfig.host = process.env.EMAIL_HOST;
+      transportConfig.port = parseInt(process.env.EMAIL_PORT || '587');
+      transportConfig.secure = process.env.EMAIL_PORT === '465';
+      transportConfig.tls = {
+        rejectUnauthorized: false,
+      };
+    }
+
+    const transporter = nodemailer.createTransport(transportConfig);
+
+    const medicationRowsHtml = (prescription.medications || []).map((med, index) => `
+      <tr style="background-color: ${index % 2 === 0 ? '#ffffff' : '#f8fafc'}; border-bottom: 1px solid #e2e8f0;">
+        <td style="padding: 10px 12px;">
+          <strong style="color: #0f172a; font-size: 14px;">${med.name}</strong>
+          <div style="color: #64748b; font-size: 12px; margin-top: 2px;">${med.dosage}</div>
+        </td>
+        <td style="padding: 10px 12px; color: #0284c7; font-weight: 600; font-size: 13px;">${med.frequency}</td>
+        <td style="padding: 10px 12px; color: #475569; font-size: 13px;">${med.duration}</td>
+        <td style="padding: 10px 12px; color: #475569; font-size: 12px; font-style: italic;">${med.instructions || 'As directed'}</td>
+      </tr>
+    `).join('');
+
+    const mailOptions = {
+      from: `"DentCare Dental Clinic" <${emailUser}>`,
+      to: email,
+      subject: `DentCare Clinic - Your Prescription from ${docName} (${rxRef})`,
+      html: `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 650px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff; color: #1e293b;">
+          <!-- Header -->
+          <div style="text-align: center; border-bottom: 2px solid #0ea5e9; padding-bottom: 16px; margin-bottom: 20px;">
+            <h2 style="color: #0ea5e9; margin: 0; font-size: 24px; font-weight: 700;">DentCare Dental Clinic</h2>
+            <p style="color: #64748b; margin: 4px 0 0 0; font-size: 13px;">Official Digital Prescription & Medical Orders</p>
+          </div>
+
+          <p style="font-size: 15px; margin-bottom: 12px;">Dear <strong>${patientName}</strong>,</p>
+          <p style="font-size: 14px; color: #475569; line-height: 1.5; margin-bottom: 20px;">
+            <strong>${docName}</strong> has issued a digital prescription for your dental care. Please find the medication instructions detailed below and in the attached official PDF document.
+          </p>
+
+          <!-- Overview Card -->
+          <div style="background-color: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+              <tr>
+                <td style="padding: 4px 0; color: #0369a1; font-weight: 600; width: 140px;">Prescription Ref:</td>
+                <td style="padding: 4px 0; color: #0f172a; font-weight: 700;">${rxRef}</td>
+              </tr>
+              <tr>
+                <td style="padding: 4px 0; color: #0369a1; font-weight: 600;">Diagnosis:</td>
+                <td style="padding: 4px 0; color: #0f172a; font-weight: 600;">${prescription.diagnosis}</td>
+              </tr>
+              <tr>
+                <td style="padding: 4px 0; color: #0369a1; font-weight: 600;">Prescribing Doctor:</td>
+                <td style="padding: 4px 0; color: #0f172a;">${docName}</td>
+              </tr>
+              <tr>
+                <td style="padding: 4px 0; color: #0369a1; font-weight: 600;">Date Issued:</td>
+                <td style="padding: 4px 0; color: #0f172a;">${formattedDate}</td>
+              </tr>
+            </table>
+          </div>
+
+          <!-- Medications List -->
+          <h3 style="color: #0f172a; font-size: 15px; margin-bottom: 10px; display: flex; align-items: center;">
+            ℞ Prescribed Medications & Dosage Schedule
+          </h3>
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
+            <thead>
+              <tr style="background-color: #f1f5f9; text-align: left; font-size: 12px; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">
+                <th style="padding: 8px 12px;">Medication & Dosage</th>
+                <th style="padding: 8px 12px;">Frequency</th>
+                <th style="padding: 8px 12px;">Duration</th>
+                <th style="padding: 8px 12px;">Instructions</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${medicationRowsHtml}
+            </tbody>
+          </table>
+
+          ${prescription.notes ? `
+          <!-- Doctor Notes -->
+          <div style="background-color: #fffbeb; border-left: 4px solid #f59e0b; padding: 12px 16px; margin-bottom: 20px; border-radius: 4px;">
+            <p style="margin: 0; font-size: 13px; color: #92400e; font-weight: 600;">Doctor's Advice / Precautions:</p>
+            <p style="margin: 4px 0 0 0; font-size: 13px; color: #78350f;">${prescription.notes}</p>
+          </div>` : ''}
+
+          <!-- PDF Attachment Notice -->
+          <div style="background-color: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 12px 16px; margin-bottom: 20px; text-align: center;">
+            <p style="margin: 0; font-size: 13px; color: #475569;">
+              📎 <strong>Official PDF Attached:</strong> You can download or print the attached <span style="font-family: monospace;">${rxRef}.pdf</span> to present at your local pharmacy.
+            </p>
+          </div>
+
+          <!-- Portal & App Notice -->
+          <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin-bottom: 20px;">
+            You can also view this prescription and your active medication reminders at any time by logging into the <strong>DentCare Patient Portal</strong> or opening the <strong>DentCare Mobile App</strong>.
+          </p>
+
+          <hr style="border: 0; border-top: 1px solid #e2e8f0; margin-top: 24px; margin-bottom: 16px;"/>
+          <div style="font-size: 12px; color: #94a3b8; text-align: center;">
+            <p style="margin: 0;">DentCare Dental Clinic | 123 Healthcare Way, Medical District | +94 11 234 5678</p>
+            <p style="margin: 4px 0 0 0;">This is an automated clinical notification. Please do not reply directly to this email.</p>
+          </div>
+        </div>
+      `,
+      attachments: pdfBuffer ? [
+        {
+          filename: `Prescription-${rxRef}.pdf`,
+          content: pdfBuffer,
+          contentType: 'application/pdf'
+        }
+      ] : []
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`✉️ Prescription email sent to ${email}: ${info.messageId}`);
+    return { success: true, message: 'Prescription email sent successfully.' };
+  } catch (error) {
+    console.error('❌ Error sending prescription email:', error);
+    console.log('\n=========================================');
+    console.log(`💊 [FALLBACK PRESCRIPTION EMAIL LOG] (SMTP issue)`);
+    console.log(`Patient: ${patientName} <${email}>`);
+    console.log(`Diagnosis: ${prescription.diagnosis}`);
+    console.log(`Ref: ${rxRef}`);
+    console.log('=========================================\n');
+    return { success: false, message: error.message };
+  }
+};
+
+
