@@ -51,14 +51,22 @@ export default function LoginPage() {
 
   return (
     <div className="flex h-screen w-full">
-          {/* Top Right Admin Login Button */}
-      <button
-        onClick={() => router.push("/")}
-        className="absolute top-6 right-6 z-50 flex items-center gap-2 rounded-full border border-blue-200 bg-white px-5 py-3 text-sm font-semibold text-blue-700 shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-700 hover:bg-blue-700 hover:text-white hover:shadow-xl"
-      >
-        <ArrowLeft size={18} />
-        Patient Login
-      </button>
+      {/* Top Navigation */}
+      <div className="absolute top-6 left-6 right-6 z-50 flex justify-between items-center">
+        <button
+          onClick={() => router.push("/")}
+          className="flex items-center gap-2 rounded-full border border-slate-200 bg-white/90 backdrop-blur-md px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition-all hover:bg-white hover:text-blue-700"
+        >
+          <ArrowLeft size={16} />
+          Back to Home
+        </button>
+        <button
+          onClick={() => router.push("/patient/login")}
+          className="flex items-center gap-2 rounded-full border border-blue-200 bg-white px-5 py-2.5 text-sm font-semibold text-blue-700 shadow-sm transition-all duration-300 hover:border-blue-700 hover:bg-blue-700 hover:text-white"
+        >
+          Patient Login
+        </button>
+      </div>
       {/* Left Section */}
       <div className="hidden lg:flex w-1/2 bg-blue-900 text-white flex-col items-center justify-center p-12">
 

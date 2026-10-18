@@ -182,7 +182,7 @@ export default function ForgotPasswordPage() {
                 setError("");
                 setMessage("");
               } else {
-                router.push("/");
+                router.push("/patient/login");
               }
             }}
             className="flex items-center gap-2 text-blue-700 font-semibold mb-6 hover:underline"

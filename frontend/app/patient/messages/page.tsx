@@ -59,7 +59,7 @@ export default function PatientMessagesPage() {
     if (typeof window !== "undefined") {
       const token = localStorage.getItem("token");
       if (!token) {
-        router.push("/");
+        router.push("/patient/login");
         return;
       }
 
@@ -76,11 +76,11 @@ export default function PatientMessagesPage() {
             setPatient(data);
             setLoading(false);
           } else {
-            router.push("/");
+            router.push("/patient/login");
           }
         } catch (err) {
           console.error("Error fetching patient profile:", err);
-          router.push("/");
+          router.push("/patient/login");
         }
       };
 
