@@ -202,51 +202,67 @@ export default function AdminReportsPage() {
             {/* Stats Cards Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
               {/* Total Revenue */}
-              <div className="bg-gradient-to-br from-emerald-600 to-emerald-500 text-white p-6 rounded-2xl shadow-md hover:shadow-lg transition">
+              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-emerald-300 hover:scale-[1.01] transition duration-200 group">
                 <div className="flex justify-between items-start mb-4">
-                  <span className="p-3 bg-white/10 rounded-xl">
+                  <span className="p-3 bg-emerald-50 text-emerald-600 rounded-xl border border-emerald-100 group-hover:scale-110 transition duration-200">
                     <TrendingUp size={24} />
                   </span>
-                  <span className="text-xs font-bold px-2 py-1 rounded bg-white/20 uppercase tracking-wider">Incoming</span>
+                  <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 uppercase tracking-wider">
+                    Incoming
+                  </span>
                 </div>
-                <div className="text-3xl font-black">Rs. {summary.totalSales.toLocaleString()}</div>
-                <div className="text-sm opacity-90 mt-2 font-medium">Total Sales Revenue</div>
+                <div className="text-3xl font-extrabold text-slate-900 group-hover:text-emerald-600 transition">
+                  Rs. {summary.totalSales.toLocaleString()}
+                </div>
+                <div className="text-sm text-slate-500 mt-1 font-medium">Total Sales Revenue</div>
               </div>
 
               {/* Total Expenses */}
-              <div className="bg-gradient-to-br from-rose-600 to-rose-500 text-white p-6 rounded-2xl shadow-md hover:shadow-lg transition">
+              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-rose-300 hover:scale-[1.01] transition duration-200 group">
                 <div className="flex justify-between items-start mb-4">
-                  <span className="p-3 bg-white/10 rounded-xl">
+                  <span className="p-3 bg-rose-50 text-rose-600 rounded-xl border border-rose-100 group-hover:scale-110 transition duration-200">
                     <TrendingDown size={24} />
                   </span>
-                  <span className="text-xs font-bold px-2 py-1 rounded bg-white/20 uppercase tracking-wider">Expenses</span>
+                  <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-rose-50 text-rose-700 border border-rose-200 uppercase tracking-wider">
+                    Expenses
+                  </span>
                 </div>
-                <div className="text-3xl font-black">Rs. {(summary.totalExpenses || 0).toLocaleString()}</div>
-                <div className="text-sm opacity-90 mt-2 font-medium">Total Supply & Stock Expenses</div>
+                <div className="text-3xl font-extrabold text-slate-900 group-hover:text-rose-600 transition">
+                  Rs. {(summary.totalExpenses || 0).toLocaleString()}
+                </div>
+                <div className="text-sm text-slate-500 mt-1 font-medium">Total Supply & Stock Expenses</div>
               </div>
 
               {/* Outstanding Balances */}
-              <div className="bg-gradient-to-br from-amber-600 to-amber-500 text-white p-6 rounded-2xl shadow-md hover:shadow-lg transition">
+              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-amber-300 hover:scale-[1.01] transition duration-200 group">
                 <div className="flex justify-between items-start mb-4">
-                  <span className="p-3 bg-white/10 rounded-xl">
+                  <span className="p-3 bg-amber-50 text-amber-600 rounded-xl border border-amber-100 group-hover:scale-110 transition duration-200">
                     <AlertCircle size={24} />
                   </span>
-                  <span className="text-xs font-bold px-2 py-1 rounded bg-white/20 uppercase tracking-wider">Receivable</span>
+                  <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 uppercase tracking-wider">
+                    Receivable
+                  </span>
                 </div>
-                <div className="text-3xl font-black">Rs. {summary.totalOutstanding.toLocaleString()}</div>
-                <div className="text-sm opacity-90 mt-2 font-medium">Total Outstanding Balance</div>
+                <div className="text-3xl font-extrabold text-slate-900 group-hover:text-amber-600 transition">
+                  Rs. {summary.totalOutstanding.toLocaleString()}
+                </div>
+                <div className="text-sm text-slate-500 mt-1 font-medium">Total Outstanding Balance</div>
               </div>
 
               {/* Total Invoices */}
-              <div className="bg-gradient-to-br from-slate-800 to-slate-700 text-white p-6 rounded-2xl shadow-md hover:shadow-lg transition">
+              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-blue-400 hover:scale-[1.01] transition duration-200 group">
                 <div className="flex justify-between items-start mb-4">
-                  <span className="p-3 bg-white/10 rounded-xl">
+                  <span className="p-3 bg-blue-50 text-blue-600 rounded-xl border border-blue-100 group-hover:scale-110 transition duration-200">
                     <FileText size={24} />
                   </span>
-                  <span className="text-xs font-bold px-2 py-1 rounded bg-white/20 uppercase tracking-wider">Volume</span>
+                  <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 uppercase tracking-wider">
+                    Volume
+                  </span>
                 </div>
-                <div className="text-3xl font-black">{summary.totalInvoices}</div>
-                <div className="text-sm opacity-90 mt-2 font-medium">Invoices Generated</div>
+                <div className="text-3xl font-extrabold text-slate-900 group-hover:text-blue-600 transition">
+                  {summary.totalInvoices}
+                </div>
+                <div className="text-sm text-slate-500 mt-1 font-medium">Invoices Generated</div>
               </div>
             </div>
 
@@ -339,21 +355,64 @@ export default function AdminReportsPage() {
 
             {/* Inventory Aggregates */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <div className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm">
-                <h4 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-2">Total Items</h4>
-                <div className="text-3xl font-black text-slate-900">{inventoryReport.totalItems}</div>
+              <div className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm hover:shadow-md hover:border-blue-400 hover:scale-[1.01] transition duration-200 group">
+                <div className="flex justify-between items-start mb-4">
+                  <span className="p-3 bg-blue-50 text-blue-600 rounded-xl border border-blue-100 group-hover:scale-110 transition duration-200">
+                    <Boxes size={24} />
+                  </span>
+                  <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 uppercase tracking-wider">
+                    Catalog
+                  </span>
+                </div>
+                <div className="text-3xl font-extrabold text-slate-900 group-hover:text-blue-600 transition">
+                  {inventoryReport.totalItems}
+                </div>
+                <div className="text-sm text-slate-500 mt-1 font-medium">Total Cataloged Items</div>
               </div>
-              <div className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm">
-                <h4 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-2">Low Stock</h4>
-                <div className="text-3xl font-black text-amber-500">{inventoryReport.lowStockCount}</div>
+
+              <div className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm hover:shadow-md hover:border-amber-300 hover:scale-[1.01] transition duration-200 group">
+                <div className="flex justify-between items-start mb-4">
+                  <span className="p-3 bg-amber-50 text-amber-600 rounded-xl border border-amber-100 group-hover:scale-110 transition duration-200">
+                    <TrendingUp size={24} />
+                  </span>
+                  <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 uppercase tracking-wider">
+                    Alert
+                  </span>
+                </div>
+                <div className="text-3xl font-extrabold text-slate-900 group-hover:text-amber-600 transition">
+                  {inventoryReport.lowStockCount}
+                </div>
+                <div className="text-sm text-slate-500 mt-1 font-medium">Low Stock Items</div>
               </div>
-              <div className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm">
-                <h4 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-2">Critical Stock</h4>
-                <div className="text-3xl font-black text-rose-500">{inventoryReport.criticalStockCount}</div>
+
+              <div className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm hover:shadow-md hover:border-rose-300 hover:scale-[1.01] transition duration-200 group">
+                <div className="flex justify-between items-start mb-4">
+                  <span className="p-3 bg-rose-50 text-rose-600 rounded-xl border border-rose-100 group-hover:scale-110 transition duration-200">
+                    <AlertCircle size={24} />
+                  </span>
+                  <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-rose-50 text-rose-700 border border-rose-200 uppercase tracking-wider">
+                    Urgent
+                  </span>
+                </div>
+                <div className="text-3xl font-extrabold text-slate-900 group-hover:text-rose-600 transition">
+                  {inventoryReport.criticalStockCount}
+                </div>
+                <div className="text-sm text-slate-500 mt-1 font-medium">Critical Stock Items</div>
               </div>
-              <div className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm">
-                <h4 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-2">Total Value</h4>
-                <div className="text-3xl font-black text-slate-900">Rs. {inventoryReport.totalValue.toLocaleString()}</div>
+
+              <div className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm hover:shadow-md hover:border-blue-400 hover:scale-[1.01] transition duration-200 group">
+                <div className="flex justify-between items-start mb-4">
+                  <span className="p-3 bg-blue-50 text-blue-600 rounded-xl border border-blue-100 group-hover:scale-110 transition duration-200">
+                    <FileText size={24} />
+                  </span>
+                  <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 uppercase tracking-wider">
+                    Valuation
+                  </span>
+                </div>
+                <div className="text-3xl font-extrabold text-slate-900 group-hover:text-blue-600 transition">
+                  Rs. {inventoryReport.totalValue.toLocaleString()}
+                </div>
+                <div className="text-sm text-slate-500 mt-1 font-medium">Total Inventory Value</div>
               </div>
             </div>
 

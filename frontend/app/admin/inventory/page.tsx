@@ -383,21 +383,21 @@ export default function InventoryPage() {
 
         {/* Low Stock Warning Banner */}
         {totalLowStock > 0 && (
-          <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 text-white rounded-3xl p-5 md:p-6 mb-8 shadow-lg shadow-orange-200/50 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="bg-amber-50/70 border border-amber-200 text-slate-800 rounded-2xl p-5 md:p-6 mb-8 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-sm">
-                <AlertTriangle size={28} className="text-white animate-pulse" />
+              <div className="p-3 bg-amber-100 text-amber-600 rounded-xl">
+                <AlertTriangle size={28} className="animate-pulse" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="bg-white/20 text-white text-[11px] font-black uppercase px-2.5 py-0.5 rounded-full">
+                  <span className="bg-amber-100 text-amber-800 text-[11px] font-bold uppercase px-2.5 py-0.5 rounded-full border border-amber-200">
                     Automated Alert
                   </span>
-                  <h4 className="font-extrabold text-lg md:text-xl">
+                  <h4 className="font-extrabold text-lg md:text-xl text-slate-900">
                     {totalLowStock} Item{totalLowStock > 1 ? "s" : ""} Below Minimum Safety Threshold!
                   </h4>
                 </div>
-                <p className="text-amber-100 text-sm mt-1 max-w-2xl">
+                <p className="text-slate-600 text-sm mt-1 max-w-2xl">
                   {criticalCount > 0 ? `${criticalCount} critical items require urgent reordering. ` : ""}
                   Supplies can be requested directly from registered suppliers with a 5-day delivery turnaround.
                 </p>
@@ -407,13 +407,13 @@ export default function InventoryPage() {
             <div className="flex items-center gap-3 w-full md:w-auto">
               <button
                 onClick={() => setActiveFilter("LOW_STOCK")}
-                className="flex-1 md:flex-initial bg-white text-orange-600 hover:bg-orange-50 px-4 py-2.5 rounded-xl text-xs font-bold shadow transition cursor-pointer flex items-center justify-center gap-1.5 whitespace-nowrap"
+                className="flex-1 md:flex-initial bg-amber-600 hover:bg-amber-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-sm transition cursor-pointer flex items-center justify-center gap-1.5 whitespace-nowrap"
               >
                 View Low Stock ({totalLowStock})
               </button>
               <button
                 onClick={() => router.push("/admin/supply")}
-                className="flex-1 md:flex-initial bg-black/20 hover:bg-black/30 border border-white/30 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1 whitespace-nowrap"
+                className="flex-1 md:flex-initial bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 px-4 py-2.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1 whitespace-nowrap shadow-sm"
               >
                 Procurement Hub <ArrowRight size={14} />
               </button>
@@ -426,51 +426,51 @@ export default function InventoryPage() {
           {/* Critical Stock */}
           <div
             onClick={() => setActiveFilter("LOW_STOCK")}
-            className="bg-red-600 text-white rounded-2xl p-6 shadow-md hover:shadow-lg transition flex items-center gap-4 cursor-pointer"
+            className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-md hover:border-rose-300 hover:scale-[1.01] transition duration-200 flex items-center gap-4 cursor-pointer group"
             title="Click to filter by low stock"
           >
-            <div className="p-4 bg-white/20 rounded-xl">
-              <AlertTriangle size={32} />
+            <div className="p-3.5 rounded-2xl bg-rose-50 text-rose-600 border border-rose-100 group-hover:scale-110 transition duration-200">
+              <AlertTriangle size={30} />
             </div>
             <div>
-              <h3 className="text-4xl font-extrabold">{criticalCount}</h3>
-              <p className="font-semibold text-red-100 mt-1">Critical Stock (≤20%)</p>
+              <h3 className="text-3xl font-extrabold text-slate-900 group-hover:text-rose-600 transition">{criticalCount}</h3>
+              <p className="font-semibold text-slate-500 mt-0.5 text-sm">Critical Stock (≤20%)</p>
             </div>
           </div>
 
           {/* Low Stock */}
           <div
             onClick={() => setActiveFilter("LOW_STOCK")}
-            className="bg-sky-500 text-white rounded-2xl p-6 shadow-md hover:shadow-lg transition flex items-center gap-4 cursor-pointer"
+            className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-md hover:border-amber-300 hover:scale-[1.01] transition duration-200 flex items-center gap-4 cursor-pointer group"
             title="Click to filter by low stock"
           >
-            <div className="p-4 bg-white/20 rounded-xl">
-              <TrendingUp size={32} />
+            <div className="p-3.5 rounded-2xl bg-amber-50 text-amber-600 border border-amber-100 group-hover:scale-110 transition duration-200">
+              <TrendingUp size={30} />
             </div>
             <div>
-              <h3 className="text-4xl font-extrabold">{lowCount}</h3>
-              <p className="font-semibold text-sky-100 mt-1">Low Stock Alerts</p>
+              <h3 className="text-3xl font-extrabold text-slate-900 group-hover:text-amber-600 transition">{lowCount}</h3>
+              <p className="font-semibold text-slate-500 mt-0.5 text-sm">Low Stock Alerts</p>
             </div>
           </div>
 
           {/* Total Items */}
           <div
             onClick={() => setActiveFilter("ALL")}
-            className="bg-teal-600 text-white rounded-2xl p-6 shadow-md hover:shadow-lg transition flex items-center gap-4 cursor-pointer"
+            className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-md hover:border-blue-400 hover:scale-[1.01] transition duration-200 flex items-center gap-4 cursor-pointer group"
             title="Click to show all items"
           >
-            <div className="p-4 bg-white/20 rounded-xl">
-              <Boxes size={32} />
+            <div className="p-3.5 rounded-2xl bg-blue-50 text-blue-600 border border-blue-100 group-hover:scale-110 transition duration-200">
+              <Boxes size={30} />
             </div>
             <div>
-              <h3 className="text-4xl font-extrabold">{totalCount}</h3>
-              <p className="font-semibold text-teal-100 mt-1">Total Cataloged Items</p>
+              <h3 className="text-3xl font-extrabold text-slate-900 group-hover:text-blue-600 transition">{totalCount}</h3>
+              <p className="font-semibold text-slate-500 mt-0.5 text-sm">Total Cataloged Items</p>
             </div>
           </div>
         </section>
 
         {/* Filter / Actions Bar */}
-        <section className="flex flex-col gap-4 mb-8 bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
+        <section className="flex flex-col gap-4 mb-8 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
           <div className="flex flex-col lg:flex-row gap-4 justify-between items-center">
             {/* Search Input */}
             <div className="relative w-full lg:w-96">
@@ -489,7 +489,7 @@ export default function InventoryPage() {
               {/* Transaction Logs Button */}
               <button
                 onClick={() => setIsLogsModalOpen(true)}
-                className="px-4 py-2.5 border border-purple-200 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-xl font-bold text-xs flex items-center gap-2 transition cursor-pointer"
+                className="px-4 py-2.5 border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl font-bold text-xs flex items-center gap-2 transition cursor-pointer"
                 title="View usage and restocking transaction audit logs"
               >
                 <History size={16} />
@@ -581,7 +581,7 @@ export default function InventoryPage() {
               onClick={() => setActiveFilter("Medication")}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
                 activeFilter === "Medication"
-                  ? "bg-teal-600 text-white shadow-sm"
+                  ? "bg-blue-600 text-white shadow-sm"
                   : "bg-slate-100 text-slate-600 hover:bg-slate-200"
               }`}
             >
@@ -593,7 +593,7 @@ export default function InventoryPage() {
         {/* Inventory Item Cards */}
         <section className="space-y-4">
           {filteredItems.length === 0 ? (
-            <div className="bg-white border rounded-3xl p-12 text-center text-slate-400 font-semibold shadow-sm">
+            <div className="bg-white border rounded-2xl p-12 text-center text-slate-400 font-semibold shadow-sm">
               No inventory items found matching your current filter.
             </div>
           ) : (
@@ -601,35 +601,35 @@ export default function InventoryPage() {
               const percent = Math.min(100, Math.max(0, (item.quantity / item.minimumThreshold) * 100));
               const isLowStock = item.status === "CRITICAL" || item.status === "Low Stock";
 
-              let badgeColor = "bg-slate-100 text-slate-700";
+              let badgeColor = "bg-slate-100 text-slate-700 border-slate-200";
               let progressColor = "bg-blue-600";
               if (item.status === "CRITICAL") {
-                badgeColor = "bg-red-600 text-white";
-                progressColor = "bg-red-600";
+                badgeColor = "bg-rose-50 text-rose-700 border-rose-200";
+                progressColor = "bg-rose-600";
               } else if (item.status === "Low Stock") {
-                badgeColor = "bg-amber-500 text-white";
+                badgeColor = "bg-amber-50 text-amber-700 border-amber-200";
                 progressColor = "bg-amber-500";
               }
 
               return (
                 <div
                   key={item._id}
-                  className={`bg-white rounded-3xl border p-5 md:p-6 shadow-sm hover:shadow-md transition flex flex-col md:flex-row md:items-center justify-between gap-6 ${
-                    isLowStock ? "border-amber-200 bg-amber-50/20" : "border-slate-200"
+                  className={`bg-white rounded-2xl border p-5 md:p-6 shadow-sm hover:shadow-md transition flex flex-col md:flex-row md:items-center justify-between gap-6 ${
+                    isLowStock ? "border-amber-200 bg-amber-50/10" : "border-slate-200"
                   }`}
                 >
                   {/* Left item details */}
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2 flex-wrap">
                       <h4 className="text-lg font-bold text-slate-900">{item.name}</h4>
-                      <span className={`px-2.5 py-0.5 rounded-full text-xs font-black uppercase ${badgeColor}`}>
+                      <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase border ${badgeColor}`}>
                         {item.status}
                       </span>
-                      <span className="text-xs font-semibold text-slate-400 bg-slate-50 px-2 py-0.5 rounded border">
+                      <span className="text-xs font-semibold text-slate-500 bg-slate-50 px-2.5 py-0.5 rounded border border-slate-200">
                         {item.category}
                       </span>
                       {isLowStock && (
-                        <span className="text-xs font-bold text-amber-700 bg-amber-100/80 px-2 py-0.5 rounded-full">
+                        <span className="text-xs font-bold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200">
                           Deficit: {Math.max(0, item.minimumThreshold - item.quantity)} {item.unit}
                         </span>
                       )}
@@ -648,7 +648,7 @@ export default function InventoryPage() {
                     </div>
 
                     {/* Progress Bar */}
-                    <div className="w-full bg-slate-100 h-3 rounded-full overflow-hidden border border-slate-100 relative max-w-xl">
+                    <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden border border-slate-100 relative max-w-xl">
                       <div className={`h-full ${progressColor} rounded-full transition-all duration-500`} style={{ width: `${percent}%` }}></div>
                     </div>
                   </div>
@@ -664,7 +664,7 @@ export default function InventoryPage() {
                       title="Request reorder from supplier with 5-day delivery"
                       className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer shadow-sm ${
                         isLowStock
-                          ? "bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-700 hover:to-sky-700 text-white shadow-blue-200"
+                          ? "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-200"
                           : "bg-slate-100 hover:bg-slate-200 text-slate-700"
                       }`}
                     >

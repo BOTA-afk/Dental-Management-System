@@ -20,6 +20,7 @@ interface PatientSelectorProps {
   onSelectPatient: (patientId: string) => void;
   label?: string;
   required?: boolean;
+  allowChange?: boolean;
 }
 
 export default function PatientSelector({
@@ -28,6 +29,7 @@ export default function PatientSelector({
   onSelectPatient,
   label = "Select Patient",
   required = true,
+  allowChange = true,
 }: PatientSelectorProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -54,7 +56,7 @@ export default function PatientSelector({
         <label className="block text-sm font-bold text-slate-700">
           {label} {required && <span className="text-red-500">*</span>}
         </label>
-        {selectedPatient && (
+        {allowChange && selectedPatient && (
           <button
             type="button"
             onClick={() => {
@@ -104,16 +106,18 @@ export default function PatientSelector({
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={() => {
-              setIsDropdownOpen(true);
-              setSearchQuery("");
-            }}
-            className="px-3 py-1.5 bg-white border border-blue-200 hover:border-blue-300 text-blue-700 text-xs font-bold rounded-xl shadow-xs transition cursor-pointer"
-          >
-            Switch
-          </button>
+          {allowChange && (
+            <button
+              type="button"
+              onClick={() => {
+                setIsDropdownOpen(true);
+                setSearchQuery("");
+              }}
+              className="px-3 py-1.5 bg-white border border-blue-200 hover:border-blue-300 text-blue-700 text-xs font-bold rounded-xl shadow-xs transition cursor-pointer"
+            >
+              Switch
+            </button>
+          )}
         </div>
       ) : (
         /* Patient search and selection panel */

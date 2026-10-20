@@ -304,26 +304,6 @@ export default function DentistTreatmentsPage() {
 
           <div className="flex gap-3">
             <button
-              onClick={() => {
-                setFormData({
-                  patientId: patients.length > 0 ? patients[0]._id : "",
-                  title: "",
-                  diagnosis: "",
-                  treatmentPlan: "",
-                  treatmentDone: "",
-                  status: "In Progress",
-                  estimatedCost: 0,
-                  targetDate: "",
-                  notes: ""
-                });
-                setIsAddModalOpen(true);
-              }}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-2xl font-bold flex items-center gap-2 shadow-md shadow-blue-200 transition cursor-pointer"
-            >
-              <Plus size={18} />
-              + Create Treatment Plan
-            </button>
-            <button
               onClick={fetchPlansAndPatients}
               className="p-3 bg-white border border-slate-200 rounded-2xl hover:bg-slate-50 transition cursor-pointer text-slate-600"
               title="Refresh"
@@ -337,46 +317,46 @@ export default function DentistTreatmentsPage() {
         <section className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
           <div
             onClick={() => setStatusFilter("In Progress")}
-            className="bg-blue-600 text-white rounded-3xl p-6 shadow-md hover:shadow-lg transition cursor-pointer flex items-center gap-4"
+            className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-md hover:border-blue-400 hover:scale-[1.01] transition duration-200 cursor-pointer group flex items-center gap-4"
           >
-            <div className="p-4 bg-white/20 rounded-2xl">
+            <div className="p-3.5 bg-blue-50 text-blue-600 rounded-2xl border border-blue-100 group-hover:scale-110 transition duration-200">
               <Activity size={28} />
             </div>
             <div>
-              <h3 className="text-3xl font-black">{inProgressCount}</h3>
-              <p className="text-blue-100 font-semibold text-sm mt-0.5">In Progress Plans</p>
+              <h3 className="text-3xl font-extrabold text-slate-900 group-hover:text-blue-600 transition">{inProgressCount}</h3>
+              <p className="text-slate-500 font-semibold text-sm mt-0.5">In Progress Plans</p>
             </div>
           </div>
 
           <div
             onClick={() => setStatusFilter("Completed")}
-            className="bg-emerald-600 text-white rounded-3xl p-6 shadow-md hover:shadow-lg transition cursor-pointer flex items-center gap-4"
+            className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-md hover:border-emerald-300 hover:scale-[1.01] transition duration-200 cursor-pointer group flex items-center gap-4"
           >
-            <div className="p-4 bg-white/20 rounded-2xl">
+            <div className="p-3.5 bg-emerald-50 text-emerald-600 rounded-2xl border border-emerald-100 group-hover:scale-110 transition duration-200">
               <CheckCircle2 size={28} />
             </div>
             <div>
-              <h3 className="text-3xl font-black">{completedCount}</h3>
-              <p className="text-emerald-100 font-semibold text-sm mt-0.5">Completed Plans</p>
+              <h3 className="text-3xl font-extrabold text-slate-900 group-hover:text-emerald-600 transition">{completedCount}</h3>
+              <p className="text-slate-500 font-semibold text-sm mt-0.5">Completed Plans</p>
             </div>
           </div>
 
           <div
             onClick={() => setStatusFilter("Planned")}
-            className="bg-purple-600 text-white rounded-3xl p-6 shadow-md hover:shadow-lg transition cursor-pointer flex items-center gap-4"
+            className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-md hover:border-amber-300 hover:scale-[1.01] transition duration-200 cursor-pointer group flex items-center gap-4"
           >
-            <div className="p-4 bg-white/20 rounded-2xl">
+            <div className="p-3.5 bg-amber-50 text-amber-600 rounded-2xl border border-amber-100 group-hover:scale-110 transition duration-200">
               <Clock size={28} />
             </div>
             <div>
-              <h3 className="text-3xl font-black">{plannedCount}</h3>
-              <p className="text-purple-100 font-semibold text-sm mt-0.5">Planned / Scheduled</p>
+              <h3 className="text-3xl font-extrabold text-slate-900 group-hover:text-amber-600 transition">{plannedCount}</h3>
+              <p className="text-slate-500 font-semibold text-sm mt-0.5">Planned / Scheduled</p>
             </div>
           </div>
         </section>
 
         {/* Filters and Search Bar */}
-        <section className="flex flex-col lg:flex-row gap-4 justify-between items-center mb-6 bg-white p-4 rounded-3xl border border-slate-200 shadow-sm">
+        <section className="flex flex-col lg:flex-row gap-4 justify-between items-center mb-6 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
           <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto flex-1">
             <div className="relative w-full sm:w-72">
               <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -385,7 +365,7 @@ export default function DentistTreatmentsPage() {
                 placeholder="Search title, diagnosis..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-11 pr-4 py-2.5 w-full rounded-2xl border border-slate-200 bg-white text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                className="pl-11 pr-4 py-2.5 w-full rounded-xl border border-slate-200 bg-white text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               />
             </div>
 
@@ -395,7 +375,7 @@ export default function DentistTreatmentsPage() {
               <select
                 value={selectedPatientFilter}
                 onChange={(e) => setSelectedPatientFilter(e.target.value)}
-                className="w-full px-3 py-2.5 border border-slate-200 rounded-2xl bg-white text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2.5 border border-slate-200 rounded-xl bg-white text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">All Patients ({patients.length})</option>
                 {patients.map((p) => (
@@ -417,18 +397,18 @@ export default function DentistTreatmentsPage() {
             </div>
           </div>
 
-          <div className="flex gap-1 bg-slate-100 p-1.5 rounded-2xl text-xs font-bold overflow-x-auto w-full lg:w-auto">
+          <div className="flex gap-1 bg-slate-100 p-1.5 rounded-xl text-xs font-bold overflow-x-auto w-full lg:w-auto">
             <button
               onClick={() => setStatusFilter("ALL")}
-              className={`px-3.5 py-1.5 rounded-xl transition cursor-pointer ${
-                statusFilter === "ALL" ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"
+              className={`px-3.5 py-1.5 rounded-lg transition cursor-pointer ${
+                statusFilter === "ALL" ? "bg-slate-900 text-white shadow-sm" : "text-slate-600 hover:text-slate-900"
               }`}
             >
               All ({plans.length})
             </button>
             <button
               onClick={() => setStatusFilter("In Progress")}
-              className={`px-3.5 py-1.5 rounded-xl transition cursor-pointer ${
+              className={`px-3.5 py-1.5 rounded-lg transition cursor-pointer ${
                 statusFilter === "In Progress" ? "bg-blue-600 text-white shadow-sm" : "text-slate-600 hover:text-slate-900"
               }`}
             >
@@ -436,7 +416,7 @@ export default function DentistTreatmentsPage() {
             </button>
             <button
               onClick={() => setStatusFilter("Completed")}
-              className={`px-3.5 py-1.5 rounded-xl transition cursor-pointer ${
+              className={`px-3.5 py-1.5 rounded-lg transition cursor-pointer ${
                 statusFilter === "Completed" ? "bg-emerald-600 text-white shadow-sm" : "text-slate-600 hover:text-slate-900"
               }`}
             >
@@ -444,8 +424,8 @@ export default function DentistTreatmentsPage() {
             </button>
             <button
               onClick={() => setStatusFilter("Planned")}
-              className={`px-3.5 py-1.5 rounded-xl transition cursor-pointer ${
-                statusFilter === "Planned" ? "bg-purple-600 text-white shadow-sm" : "text-slate-600 hover:text-slate-900"
+              className={`px-3.5 py-1.5 rounded-lg transition cursor-pointer ${
+                statusFilter === "Planned" ? "bg-amber-600 text-white shadow-sm" : "text-slate-600 hover:text-slate-900"
               }`}
             >
               Planned ({plannedCount})
@@ -503,7 +483,7 @@ export default function DentistTreatmentsPage() {
         {/* Treatment Plans Cards List */}
         <section className="space-y-4">
           {filteredPlans.length === 0 ? (
-            <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center text-slate-400 font-semibold shadow-sm">
+            <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center text-slate-400 font-semibold shadow-sm">
               <Stethoscope size={40} className="mx-auto mb-2 text-slate-300" />
               <p>No clinical treatment plans found matching filters.</p>
             </div>
@@ -511,12 +491,12 @@ export default function DentistTreatmentsPage() {
             filteredPlans.map((plan) => {
               let statusBadge = "bg-blue-50 text-blue-700 border-blue-200";
               if (plan.status === "Completed") statusBadge = "bg-emerald-50 text-emerald-700 border-emerald-200";
-              if (plan.status === "Planned") statusBadge = "bg-purple-50 text-purple-700 border-purple-200";
+              if (plan.status === "Planned") statusBadge = "bg-amber-50 text-amber-700 border-amber-200";
 
               return (
                 <div
                   key={plan._id}
-                  className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition flex flex-col lg:flex-row justify-between gap-6"
+                  className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition flex flex-col lg:flex-row justify-between gap-6"
                 >
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2 flex-wrap">
@@ -525,7 +505,7 @@ export default function DentistTreatmentsPage() {
                         {plan.status}
                       </span>
                       {plan.estimatedCost > 0 && (
-                        <span className="text-xs font-extrabold text-slate-700 bg-slate-100 px-2.5 py-0.5 rounded-lg">
+                        <span className="text-xs font-extrabold text-slate-700 bg-slate-100 px-2.5 py-0.5 rounded-lg border border-slate-200">
                           Est. Rs. {plan.estimatedCost.toLocaleString()}
                         </span>
                       )}
@@ -542,25 +522,26 @@ export default function DentistTreatmentsPage() {
                         Started: {new Date(plan.startDate).toLocaleDateString()}
                       </span>
                       {plan.targetDate && (
-                        <span className="flex items-center gap-1 text-purple-600 font-bold">
+                        <span className="flex items-center gap-1 text-slate-700 font-semibold">
+                          <Clock size={13} className="text-amber-500" />
                           Target: {new Date(plan.targetDate).toLocaleDateString()}
                         </span>
                       )}
                     </div>
 
                     {plan.diagnosis && (
-                      <div className="mb-3 bg-slate-50 p-3 rounded-2xl border border-slate-100 text-xs">
+                      <div className="mb-3 bg-slate-50 p-3 rounded-xl border border-slate-100 text-xs">
                         <span className="font-bold text-slate-700 block mb-0.5">Clinical Diagnosis:</span>
                         <p className="text-slate-600">{plan.diagnosis}</p>
                       </div>
                     )}
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs mb-3">
-                      <div className="bg-blue-50/50 p-3.5 rounded-2xl border border-blue-100">
+                      <div className="bg-blue-50/50 p-3.5 rounded-xl border border-blue-100">
                         <span className="font-bold text-blue-900 block mb-1">Planned Procedures & Steps:</span>
                         <p className="text-slate-700 whitespace-pre-line leading-relaxed">{plan.treatmentPlan}</p>
                       </div>
-                      <div className="bg-emerald-50/40 p-3.5 rounded-2xl border border-emerald-100">
+                      <div className="bg-emerald-50/40 p-3.5 rounded-xl border border-emerald-100">
                         <span className="font-bold text-emerald-900 block mb-1">Treatment Done to Date:</span>
                         <p className="text-slate-700 whitespace-pre-line leading-relaxed">
                           {plan.treatmentDone || <span className="italic text-slate-400">No procedures logged yet</span>}
@@ -616,7 +597,7 @@ export default function DentistTreatmentsPage() {
       {/* --- CREATE TREATMENT PLAN MODAL --- */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 animate-fade-in backdrop-blur-sm">
-          <div className="bg-white rounded-3xl w-full max-w-2xl p-6 md:p-8 shadow-2xl relative border border-slate-100 max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-2xl w-full max-w-2xl p-6 md:p-8 shadow-2xl relative border border-slate-100 max-h-[90vh] overflow-y-auto">
             <button
               onClick={() => setIsAddModalOpen(false)}
               className="absolute top-5 right-5 text-slate-400 hover:text-slate-600 p-2 bg-slate-100 rounded-full"
@@ -634,6 +615,7 @@ export default function DentistTreatmentsPage() {
                 onSelectPatient={(patientId) => setFormData({ ...formData, patientId })}
                 label="Select Patient"
                 required
+                allowChange={false}
               />
 
               <div>
@@ -751,7 +733,7 @@ export default function DentistTreatmentsPage() {
       {/* --- EDIT TREATMENT PLAN MODAL --- */}
       {isEditModalOpen && selectedPlan && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 animate-fade-in backdrop-blur-sm">
-          <div className="bg-white rounded-3xl w-full max-w-2xl p-6 md:p-8 shadow-2xl relative border border-slate-100 max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-2xl w-full max-w-2xl p-6 md:p-8 shadow-2xl relative border border-slate-100 max-h-[90vh] overflow-y-auto">
             <button
               onClick={() => setIsEditModalOpen(false)}
               className="absolute top-5 right-5 text-slate-400 hover:text-slate-600 p-2 bg-slate-100 rounded-full"

@@ -96,7 +96,7 @@ export default function InventoryLogsModal({ isOpen, onClose }: InventoryLogsMod
         {/* Modal Header */}
         <div className="flex items-center justify-between mb-6 pr-10">
           <div className="flex items-center gap-3">
-            <div className="p-3 bg-purple-100 text-purple-600 rounded-2xl">
+            <div className="p-3 bg-blue-100 text-blue-600 rounded-2xl">
               <History size={24} />
             </div>
             <div>
@@ -122,7 +122,7 @@ export default function InventoryLogsModal({ isOpen, onClose }: InventoryLogsMod
               placeholder="Search by item, notes, or staff..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 

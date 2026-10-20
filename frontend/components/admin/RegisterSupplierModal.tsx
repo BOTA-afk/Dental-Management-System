@@ -97,7 +97,7 @@ export default function RegisterSupplierModal({
         </button>
 
         <div className="flex items-center gap-3 mb-6">
-          <div className="p-3 bg-teal-100 text-teal-600 rounded-2xl">
+          <div className="p-3 bg-blue-100 text-blue-600 rounded-2xl">
             <Building2 size={24} />
           </div>
           <div>
@@ -117,7 +117,7 @@ export default function RegisterSupplierModal({
                 placeholder="e.g. Lanka Dental Logistics"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
           </div>
@@ -132,7 +132,7 @@ export default function RegisterSupplierModal({
                   placeholder="e.g. John Doe"
                   value={formData.contactPerson}
                   onChange={(e) => setFormData({ ...formData, contactPerson: e.target.value })}
-                  className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
             </div>
@@ -147,7 +147,7 @@ export default function RegisterSupplierModal({
                   placeholder="orders@supplier.lk"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
             </div>
@@ -163,7 +163,7 @@ export default function RegisterSupplierModal({
                   placeholder="e.g. +94 11 234 5678"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
             </div>
@@ -177,7 +177,7 @@ export default function RegisterSupplierModal({
                   placeholder="e.g. Colombo, Sri Lanka"
                   value={formData.address}
                   onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                  className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
             </div>
@@ -196,7 +196,7 @@ export default function RegisterSupplierModal({
                     onClick={() => handleCategoryToggle(cat)}
                     className={`px-3.5 py-1.5 rounded-xl text-xs font-bold border transition flex items-center gap-1.5 cursor-pointer ${
                       selected
-                        ? "bg-teal-600 border-teal-600 text-white shadow-sm"
+                        ? "bg-blue-600 border-blue-600 text-white shadow-sm shadow-blue-200"
                         : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100"
                     }`}
                   >
@@ -214,7 +214,7 @@ export default function RegisterSupplierModal({
               placeholder="e.g. 5-day delivery guarantee, minimum order Rs. 5000"
               value={formData.notes}
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-teal-500 h-20 resize-none text-sm"
+              className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 h-20 resize-none text-sm"
             />
           </div>
 
@@ -229,7 +229,7 @@ export default function RegisterSupplierModal({
             <button
               type="submit"
               disabled={submitting}
-              className="flex-2 bg-teal-600 hover:bg-teal-700 text-white py-3 rounded-xl font-bold shadow-md shadow-teal-200 transition cursor-pointer disabled:opacity-50"
+              className="flex-2 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold shadow-md shadow-blue-200 transition cursor-pointer disabled:opacity-50"
             >
               {submitting ? "Registering..." : "Register Supplier"}
             </button>

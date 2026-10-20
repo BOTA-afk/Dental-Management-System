@@ -232,6 +232,61 @@ export default function AdminSupplyRequestsPage() {
           showSearch={false}
         />
 
+        {/* Statistical Summary Cards */}
+        <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
+          <div
+            onClick={() => setActiveTab("lowStock")}
+            className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-md hover:border-amber-300 hover:scale-[1.01] transition duration-200 cursor-pointer group flex items-center gap-4"
+          >
+            <div className="p-3.5 rounded-2xl bg-amber-50 text-amber-600 border border-amber-100 group-hover:scale-110 transition duration-200">
+              <AlertTriangle size={26} />
+            </div>
+            <div>
+              <h3 className="text-3xl font-extrabold text-slate-900 group-hover:text-amber-600 transition">{lowStockItems.length}</h3>
+              <p className="font-semibold text-slate-500 mt-0.5 text-sm">Low Stock Items</p>
+            </div>
+          </div>
+
+          <div
+            onClick={() => setActiveTab("suppliers")}
+            className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-md hover:border-blue-400 hover:scale-[1.01] transition duration-200 cursor-pointer group flex items-center gap-4"
+          >
+            <div className="p-3.5 rounded-2xl bg-blue-50 text-blue-600 border border-blue-100 group-hover:scale-110 transition duration-200">
+              <Building2 size={26} />
+            </div>
+            <div>
+              <h3 className="text-3xl font-extrabold text-slate-900 group-hover:text-blue-600 transition">{suppliers.length}</h3>
+              <p className="font-semibold text-slate-500 mt-0.5 text-sm">Registered Suppliers</p>
+            </div>
+          </div>
+
+          <div
+            onClick={() => setActiveTab("orders")}
+            className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-md hover:border-blue-400 hover:scale-[1.01] transition duration-200 cursor-pointer group flex items-center gap-4"
+          >
+            <div className="p-3.5 rounded-2xl bg-blue-50 text-blue-600 border border-blue-100 group-hover:scale-110 transition duration-200">
+              <Truck size={26} />
+            </div>
+            <div>
+              <h3 className="text-3xl font-extrabold text-slate-900 group-hover:text-blue-600 transition">{pendingOrdersCount}</h3>
+              <p className="font-semibold text-slate-500 mt-0.5 text-sm">Active Orders</p>
+            </div>
+          </div>
+
+          <div
+            onClick={() => setActiveTab("dentistRequests")}
+            className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-md hover:border-blue-400 hover:scale-[1.01] transition duration-200 cursor-pointer group flex items-center gap-4"
+          >
+            <div className="p-3.5 rounded-2xl bg-blue-50 text-blue-600 border border-blue-100 group-hover:scale-110 transition duration-200">
+              <ClipboardList size={26} />
+            </div>
+            <div>
+              <h3 className="text-3xl font-extrabold text-slate-900 group-hover:text-blue-600 transition">{pendingDentistCount}</h3>
+              <p className="font-semibold text-slate-500 mt-0.5 text-sm">Dentist Requests</p>
+            </div>
+          </div>
+        </section>
+
         {/* Navigation Tabs Bar */}
         <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 mb-8 bg-white p-3 rounded-2xl border border-slate-200 shadow-sm">
           <div className="flex items-center gap-1.5 flex-wrap">
@@ -240,14 +295,16 @@ export default function AdminSupplyRequestsPage() {
               onClick={() => setActiveTab("lowStock")}
               className={`px-4 py-2.5 rounded-xl font-bold text-xs md:text-sm transition flex items-center gap-2 cursor-pointer ${
                 activeTab === "lowStock"
-                  ? "bg-amber-600 text-white shadow-md shadow-amber-200"
-                  : "text-slate-600 hover:bg-slate-100"
+                  ? "bg-blue-600 text-white shadow-md shadow-blue-200"
+                  : "text-slate-600 hover:bg-slate-100 hover:text-blue-600"
               }`}
             >
               <AlertTriangle size={16} />
               Low Stock Queue
               {lowStockItems.length > 0 && (
-                <span className="ml-1 bg-white text-amber-700 text-xs px-2 py-0.5 rounded-full font-black">
+                <span className={`ml-1 text-xs px-2 py-0.5 rounded-full font-bold ${
+                  activeTab === "lowStock" ? "bg-white/20 text-white" : "bg-amber-100 text-amber-800"
+                }`}>
                   {lowStockItems.length}
                 </span>
               )}
@@ -258,8 +315,8 @@ export default function AdminSupplyRequestsPage() {
               onClick={() => setActiveTab("suppliers")}
               className={`px-4 py-2.5 rounded-xl font-bold text-xs md:text-sm transition flex items-center gap-2 cursor-pointer ${
                 activeTab === "suppliers"
-                  ? "bg-teal-600 text-white shadow-md shadow-teal-200"
-                  : "text-slate-600 hover:bg-slate-100"
+                  ? "bg-blue-600 text-white shadow-md shadow-blue-200"
+                  : "text-slate-600 hover:bg-slate-100 hover:text-blue-600"
               }`}
             >
               <Building2 size={16} />
@@ -272,13 +329,15 @@ export default function AdminSupplyRequestsPage() {
               className={`px-4 py-2.5 rounded-xl font-bold text-xs md:text-sm transition flex items-center gap-2 cursor-pointer ${
                 activeTab === "orders"
                   ? "bg-blue-600 text-white shadow-md shadow-blue-200"
-                  : "text-slate-600 hover:bg-slate-100"
+                  : "text-slate-600 hover:bg-slate-100 hover:text-blue-600"
               }`}
             >
               <Truck size={16} />
               Supplier Orders
               {pendingOrdersCount > 0 && (
-                <span className="ml-1 bg-white text-blue-700 text-xs px-2 py-0.5 rounded-full font-black">
+                <span className={`ml-1 text-xs px-2 py-0.5 rounded-full font-bold ${
+                  activeTab === "orders" ? "bg-white/20 text-white" : "bg-blue-100 text-blue-800"
+                }`}>
                   {pendingOrdersCount}
                 </span>
               )}
@@ -289,14 +348,16 @@ export default function AdminSupplyRequestsPage() {
               onClick={() => setActiveTab("dentistRequests")}
               className={`px-4 py-2.5 rounded-xl font-bold text-xs md:text-sm transition flex items-center gap-2 cursor-pointer ${
                 activeTab === "dentistRequests"
-                  ? "bg-indigo-600 text-white shadow-md shadow-indigo-200"
-                  : "text-slate-600 hover:bg-slate-100"
+                  ? "bg-blue-600 text-white shadow-md shadow-blue-200"
+                  : "text-slate-600 hover:bg-slate-100 hover:text-blue-600"
               }`}
             >
               <ClipboardList size={16} />
               Dentist Requests
               {pendingDentistCount > 0 && (
-                <span className="ml-1 bg-rose-500 text-white text-xs px-2 py-0.5 rounded-full font-black">
+                <span className={`ml-1 text-xs px-2 py-0.5 rounded-full font-bold ${
+                  activeTab === "dentistRequests" ? "bg-white/20 text-white" : "bg-rose-100 text-rose-800"
+                }`}>
                   {pendingDentistCount}
                 </span>
               )}
@@ -308,7 +369,7 @@ export default function AdminSupplyRequestsPage() {
             {activeTab === "suppliers" && (
               <button
                 onClick={() => setIsRegisterSupplierOpen(true)}
-                className="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow transition cursor-pointer"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm shadow-blue-200 transition cursor-pointer"
               >
                 <Plus size={16} />
                 + Register Supplier
@@ -321,7 +382,7 @@ export default function AdminSupplyRequestsPage() {
                   setSelectedItemForOrder(null);
                   setIsSupplierOrderModalOpen(true);
                 }}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow transition cursor-pointer"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm shadow-blue-200 transition cursor-pointer"
               >
                 <Plus size={16} />
                 + New Supplier Order
@@ -340,7 +401,7 @@ export default function AdminSupplyRequestsPage() {
 
         {/* --- TAB 1: LOW STOCK PROCUREMENT QUEUE --- */}
         {activeTab === "lowStock" && (
-          <section className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden p-6 md:p-8">
+          <section className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden p-6 md:p-8">
             <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100 flex-wrap gap-4">
               <div>
                 <h3 className="font-extrabold text-slate-900 text-xl flex items-center gap-2">
@@ -374,25 +435,27 @@ export default function AdminSupplyRequestsPage() {
                   return (
                     <div
                       key={item._id}
-                      className={`p-5 rounded-2xl border transition flex flex-col justify-between gap-4 ${
-                        isCritical ? "border-rose-300 bg-rose-50/40" : "border-amber-200 bg-amber-50/40"
+                      className={`bg-white rounded-2xl border p-5 shadow-sm hover:shadow-md transition flex flex-col justify-between gap-4 ${
+                        isCritical ? "border-rose-200 hover:border-rose-300" : "border-slate-200 hover:border-blue-300"
                       }`}
                     >
                       <div>
                         <div className="flex items-center justify-between mb-2">
                           <span
-                            className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase ${
-                              isCritical ? "bg-red-600 text-white" : "bg-amber-500 text-white"
+                            className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase border ${
+                              isCritical ? "bg-rose-50 text-rose-700 border-rose-200" : "bg-amber-50 text-amber-700 border-amber-200"
                             }`}
                           >
                             {item.status}
                           </span>
-                          <span className="text-xs font-semibold text-slate-500">{item.category}</span>
+                          <span className="text-xs font-semibold text-slate-500 bg-slate-50 px-2 py-0.5 rounded border border-slate-200">
+                            {item.category}
+                          </span>
                         </div>
 
                         <h4 className="text-lg font-bold text-slate-900 mb-1">{item.name}</h4>
 
-                        <div className="grid grid-cols-3 gap-2 py-3 border-y border-slate-200/60 my-2 text-xs">
+                        <div className="grid grid-cols-3 gap-2 py-3 border-y border-slate-100 my-2 text-xs">
                           <div>
                             <span className="text-slate-400 block">Current Stock</span>
                             <span className="text-sm font-extrabold text-rose-600">
@@ -420,7 +483,7 @@ export default function AdminSupplyRequestsPage() {
                           setSelectedItemForOrder(item);
                           setIsSupplierOrderModalOpen(true);
                         }}
-                        className="w-full bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-700 hover:to-sky-700 text-white py-2.5 px-4 rounded-xl text-xs font-bold shadow-md shadow-blue-200 transition cursor-pointer flex items-center justify-center gap-2"
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 px-4 rounded-xl text-xs font-bold shadow-sm shadow-blue-200 transition cursor-pointer flex items-center justify-center gap-2"
                       >
                         <Truck size={16} />
                         Request from Supplier (5-Day Delivery)
@@ -435,11 +498,11 @@ export default function AdminSupplyRequestsPage() {
 
         {/* --- TAB 2: SUPPLIERS DIRECTORY --- */}
         {activeTab === "suppliers" && (
-          <section className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden p-6 md:p-8">
+          <section className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden p-6 md:p-8">
             <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100 flex-wrap gap-4">
               <div>
                 <h3 className="font-extrabold text-slate-900 text-xl flex items-center gap-2">
-                  <Building2 className="text-teal-600" size={24} />
+                  <Building2 className="text-blue-600" size={24} />
                   Registered Dental Suppliers Directory
                 </h3>
                 <p className="text-slate-500 text-sm mt-0.5">
@@ -449,7 +512,7 @@ export default function AdminSupplyRequestsPage() {
 
               <button
                 onClick={() => setIsRegisterSupplierOpen(true)}
-                className="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow transition cursor-pointer"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm shadow-blue-200 transition cursor-pointer"
               >
                 <Plus size={16} />
                 + Register Supplier
@@ -462,7 +525,7 @@ export default function AdminSupplyRequestsPage() {
                 <p className="font-bold">No suppliers registered yet.</p>
                 <button
                   onClick={() => setIsRegisterSupplierOpen(true)}
-                  className="mt-3 text-teal-600 font-bold text-xs hover:underline"
+                  className="mt-3 text-blue-600 font-bold text-xs hover:underline"
                 >
                   Click here to register your first supplier
                 </button>
@@ -472,14 +535,14 @@ export default function AdminSupplyRequestsPage() {
                 {suppliers.map((sup) => (
                   <div
                     key={sup._id}
-                    className="p-5 rounded-2xl border border-slate-200 hover:border-teal-300 hover:shadow-md transition bg-slate-50/50 flex flex-col justify-between"
+                    className="p-5 rounded-2xl border border-slate-200 hover:border-blue-300 hover:shadow-md transition bg-white flex flex-col justify-between"
                   >
                     <div>
                       <div className="flex items-start justify-between gap-2 mb-2">
                         <h4 className="font-bold text-slate-900 text-base">{sup.name}</h4>
                         <div className="flex gap-1 flex-wrap justify-end">
                           {sup.categories?.map((cat) => (
-                            <span key={cat} className="text-[10px] font-bold bg-teal-50 text-teal-700 border border-teal-200 px-2 py-0.5 rounded">
+                            <span key={cat} className="text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded">
                               {cat}
                             </span>
                           ))}
@@ -511,7 +574,7 @@ export default function AdminSupplyRequestsPage() {
                         setSelectedItemForOrder(null);
                         setIsSupplierOrderModalOpen(true);
                       }}
-                      className="w-full mt-2 py-2 px-3 border border-teal-200 text-teal-700 bg-teal-50 hover:bg-teal-600 hover:text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
+                      className="w-full mt-2 py-2 px-3 border border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-600 hover:text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
                     >
                       <Truck size={14} /> Place Order with Supplier
                     </button>
@@ -524,7 +587,7 @@ export default function AdminSupplyRequestsPage() {
 
         {/* --- TAB 3: ACTIVE SUPPLIER ORDERS (5-DAY DELIVERY SLA) --- */}
         {activeTab === "orders" && (
-          <section className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden p-6 md:p-8">
+          <section className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden p-6 md:p-8">
             <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100 flex-wrap gap-4">
               <div>
                 <h3 className="font-extrabold text-slate-900 text-xl flex items-center gap-2">
@@ -541,7 +604,7 @@ export default function AdminSupplyRequestsPage() {
                   setSelectedItemForOrder(null);
                   setIsSupplierOrderModalOpen(true);
                 }}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow transition cursor-pointer"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm shadow-blue-200 transition cursor-pointer"
               >
                 <Plus size={16} />
                 + Create Supplier Order
@@ -646,11 +709,11 @@ export default function AdminSupplyRequestsPage() {
 
         {/* --- TAB 4: DENTIST SUPPLY REQUESTS --- */}
         {activeTab === "dentistRequests" && (
-          <section className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden p-6 md:p-8">
+          <section className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden p-6 md:p-8">
             <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100 flex-wrap gap-4">
               <div>
                 <h3 className="font-extrabold text-slate-900 text-xl flex items-center gap-2">
-                  <ClipboardList className="text-indigo-600" size={24} />
+                  <ClipboardList className="text-blue-600" size={24} />
                   Dentist Material Requests
                 </h3>
                 <p className="text-slate-500 text-sm mt-0.5">

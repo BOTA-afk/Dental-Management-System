@@ -400,39 +400,59 @@ export default function DentistXRaysPage() {
         <section className="grid grid-cols-1 sm:grid-cols-4 gap-5 mb-8">
           <div
             onClick={() => setCategoryFilter("All")}
-            className="bg-slate-900 text-white rounded-3xl p-5 shadow-sm hover:shadow-md transition cursor-pointer"
+            className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-md hover:border-blue-400 hover:scale-[1.01] transition duration-200 cursor-pointer group flex items-center gap-4"
           >
-            <span className="text-xs font-bold text-slate-400 block mb-1">Total Radiographs</span>
-            <h3 className="text-3xl font-black">{xrays.length}</h3>
+            <div className="p-3.5 bg-blue-50 text-blue-600 rounded-2xl border border-blue-100 group-hover:scale-110 transition duration-200">
+              <FileHeart size={26} />
+            </div>
+            <div>
+              <h3 className="text-3xl font-extrabold text-slate-900 group-hover:text-blue-600 transition">{xrays.length}</h3>
+              <p className="text-slate-500 font-semibold text-sm mt-0.5">Total Radiographs</p>
+            </div>
           </div>
 
           <div
             onClick={() => setCategoryFilter("Panoramic")}
-            className="bg-sky-600 text-white rounded-3xl p-5 shadow-sm hover:shadow-md transition cursor-pointer"
+            className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-md hover:border-sky-400 hover:scale-[1.01] transition duration-200 cursor-pointer group flex items-center gap-4"
           >
-            <span className="text-xs font-bold text-sky-200 block mb-1">Panoramic (OPG)</span>
-            <h3 className="text-3xl font-black">{panoramicCount}</h3>
+            <div className="p-3.5 bg-sky-50 text-sky-600 rounded-2xl border border-sky-100 group-hover:scale-110 transition duration-200">
+              <Layers size={26} />
+            </div>
+            <div>
+              <h3 className="text-3xl font-extrabold text-slate-900 group-hover:text-sky-600 transition">{panoramicCount}</h3>
+              <p className="text-slate-500 font-semibold text-sm mt-0.5">Panoramic (OPG)</p>
+            </div>
           </div>
 
           <div
             onClick={() => setCategoryFilter("Periapical")}
-            className="bg-teal-600 text-white rounded-3xl p-5 shadow-sm hover:shadow-md transition cursor-pointer"
+            className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-md hover:border-indigo-400 hover:scale-[1.01] transition duration-200 cursor-pointer group flex items-center gap-4"
           >
-            <span className="text-xs font-bold text-teal-200 block mb-1">Periapical Views</span>
-            <h3 className="text-3xl font-black">{periapicalCount}</h3>
+            <div className="p-3.5 bg-indigo-50 text-indigo-600 rounded-2xl border border-indigo-100 group-hover:scale-110 transition duration-200">
+              <Camera size={26} />
+            </div>
+            <div>
+              <h3 className="text-3xl font-extrabold text-slate-900 group-hover:text-indigo-600 transition">{periapicalCount}</h3>
+              <p className="text-slate-500 font-semibold text-sm mt-0.5">Periapical Views</p>
+            </div>
           </div>
 
           <div
             onClick={() => setCategoryFilter("Bitewing")}
-            className="bg-indigo-600 text-white rounded-3xl p-5 shadow-sm hover:shadow-md transition cursor-pointer"
+            className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-md hover:border-amber-400 hover:scale-[1.01] transition duration-200 cursor-pointer group flex items-center gap-4"
           >
-            <span className="text-xs font-bold text-indigo-200 block mb-1">Bitewings</span>
-            <h3 className="text-3xl font-black">{bitewingCount}</h3>
+            <div className="p-3.5 bg-amber-50 text-amber-600 rounded-2xl border border-amber-100 group-hover:scale-110 transition duration-200">
+              <ZoomIn size={26} />
+            </div>
+            <div>
+              <h3 className="text-3xl font-extrabold text-slate-900 group-hover:text-amber-600 transition">{bitewingCount}</h3>
+              <p className="text-slate-500 font-semibold text-sm mt-0.5">Bitewings</p>
+            </div>
           </div>
         </section>
 
         {/* Filter and Search Bar */}
-        <section className="flex flex-col lg:flex-row gap-4 justify-between items-center mb-6 bg-white p-4 rounded-3xl border border-slate-200 shadow-sm">
+        <section className="flex flex-col lg:flex-row gap-4 justify-between items-center mb-6 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
           <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto flex-1">
             <div className="relative w-full sm:w-72">
               <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -441,7 +461,7 @@ export default function DentistXRaysPage() {
                 placeholder="Search title, findings..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-11 pr-4 py-2.5 w-full rounded-2xl border border-slate-200 bg-white text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                className="pl-11 pr-4 py-2.5 w-full rounded-xl border border-slate-200 bg-white text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               />
             </div>
 
@@ -451,7 +471,7 @@ export default function DentistXRaysPage() {
               <select
                 value={selectedPatientFilter}
                 onChange={(e) => setSelectedPatientFilter(e.target.value)}
-                className="w-full px-3 py-2.5 border border-slate-200 rounded-2xl bg-white text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2.5 border border-slate-200 rounded-xl bg-white text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">All Patients ({patients.length})</option>
                 {patients.map((p) => (
@@ -473,13 +493,17 @@ export default function DentistXRaysPage() {
             </div>
           </div>
 
-          <div className="flex gap-1.5 bg-slate-100 p-1.5 rounded-2xl text-xs font-bold overflow-x-auto w-full lg:w-auto">
+          <div className="flex gap-1.5 bg-slate-100 p-1.5 rounded-xl text-xs font-bold overflow-x-auto w-full lg:w-auto">
             {["All", "Panoramic", "Periapical", "Bitewing", "Cephalometric", "CBCT 3D"].map((cat) => (
               <button
                 key={cat}
                 onClick={() => setCategoryFilter(cat)}
-                className={`px-3.5 py-1.5 rounded-xl transition cursor-pointer whitespace-nowrap ${
-                  categoryFilter === cat ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"
+                className={`px-3.5 py-1.5 rounded-lg transition cursor-pointer whitespace-nowrap ${
+                  categoryFilter === cat
+                    ? cat === "All"
+                      ? "bg-slate-900 text-white shadow-sm"
+                      : "bg-blue-600 text-white shadow-sm"
+                    : "text-slate-600 hover:text-slate-900"
                 }`}
               >
                 {cat}
@@ -490,13 +514,13 @@ export default function DentistXRaysPage() {
 
         {/* Active Patient Filter Banner */}
         {selectedPatientFilter && (
-          <div className="mb-6 p-4 bg-violet-50 border border-violet-200 rounded-2xl flex items-center justify-between flex-wrap gap-3 animate-fade-in">
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-2xl flex items-center justify-between flex-wrap gap-3 animate-fade-in">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-violet-600 text-white font-bold flex items-center justify-center text-sm shadow-xs">
+              <div className="w-9 h-9 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-sm shadow-xs">
                 {patients.find((p) => p._id === selectedPatientFilter)?.name.charAt(0).toUpperCase()}
               </div>
               <div>
-                <span className="text-[10px] font-extrabold text-violet-800 uppercase tracking-wider block">Filtered Patient</span>
+                <span className="text-[10px] font-extrabold text-blue-800 uppercase tracking-wider block">Filtered Patient</span>
                 <span className="font-bold text-slate-900 text-base">
                   {patients.find((p) => p._id === selectedPatientFilter)?.name}
                 </span>
@@ -519,7 +543,7 @@ export default function DentistXRaysPage() {
                   });
                   setIsAddModalOpen(true);
                 }}
-                className="bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs px-3.5 py-2 rounded-xl transition shadow-xs cursor-pointer flex items-center gap-1.5"
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-3.5 py-2 rounded-xl transition shadow-xs cursor-pointer flex items-center gap-1.5"
               >
                 <Plus size={14} /> Upload X-Ray for {patients.find((p) => p._id === selectedPatientFilter)?.name}
               </button>
@@ -536,7 +560,7 @@ export default function DentistXRaysPage() {
         {/* X-Rays Grid Gallery */}
         <section>
           {filteredXrays.length === 0 ? (
-            <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center text-slate-400 font-semibold shadow-sm">
+            <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center text-slate-400 font-semibold shadow-sm">
               <FileHeart size={40} className="mx-auto mb-2 text-slate-300" />
               <p>No X-ray records found matching your filters.</p>
             </div>
@@ -545,7 +569,7 @@ export default function DentistXRaysPage() {
               {filteredXrays.map((item) => (
                 <div
                   key={item._id}
-                  className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between group"
+                  className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md hover:border-blue-400 hover:scale-[1.01] transition duration-200 flex flex-col justify-between group"
                 >
                   {/* Image Preview Box */}
                   <div
@@ -590,7 +614,7 @@ export default function DentistXRaysPage() {
                       </div>
 
                       {item.findings ? (
-                        <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100 text-xs mb-3">
+                        <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-xs mb-3">
                           <span className="font-bold text-slate-700 block mb-0.5">Radiological Findings:</span>
                           <p className="text-slate-600 line-clamp-3 leading-relaxed">{item.findings}</p>
                         </div>
@@ -651,7 +675,7 @@ export default function DentistXRaysPage() {
       {/* --- HIGH-RES LIGHTBOX VIEWER MODAL --- */}
       {lightboxXray && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 animate-fade-in backdrop-blur-md">
-          <div className="bg-slate-900 rounded-3xl w-full max-w-4xl p-6 md:p-8 shadow-2xl relative border border-slate-800 text-white max-h-[95vh] flex flex-col">
+          <div className="bg-slate-900 rounded-2xl w-full max-w-4xl p-6 md:p-8 shadow-2xl relative border border-slate-800 text-white max-h-[95vh] flex flex-col">
             <button
               onClick={() => setLightboxXray(null)}
               className="absolute top-5 right-5 text-slate-400 hover:text-white p-2 bg-slate-800 rounded-full transition"
@@ -662,7 +686,7 @@ export default function DentistXRaysPage() {
             {/* Lightbox Header */}
             <div className="flex items-center justify-between mb-4 pr-12 flex-wrap gap-2">
               <div>
-                <span className="text-xs font-bold text-sky-400 uppercase tracking-wider">{lightboxXray.category} Radiograph</span>
+                <span className="text-xs font-bold text-blue-400 uppercase tracking-wider">{lightboxXray.category} Radiograph</span>
                 <h3 className="text-2xl font-black">{lightboxXray.title}</h3>
                 <p className="text-slate-400 text-xs">
                   Patient: <strong className="text-slate-200">{lightboxXray.patient?.name}</strong> | Date: {new Date(lightboxXray.date).toLocaleDateString()}
@@ -684,7 +708,7 @@ export default function DentistXRaysPage() {
             </div>
 
             {/* Display Image */}
-            <div className="flex-1 bg-black rounded-2xl flex items-center justify-center p-4 border border-slate-800 overflow-hidden min-h-[320px]">
+            <div className="flex-1 bg-black rounded-xl flex items-center justify-center p-4 border border-slate-800 overflow-hidden min-h-[320px]">
               <img
                 src={lightboxXray.imageUrl}
                 alt={lightboxXray.title}
@@ -696,8 +720,8 @@ export default function DentistXRaysPage() {
 
             {/* Findings & Notes Footer */}
             {lightboxXray.findings && (
-              <div className="mt-4 bg-slate-800/80 p-4 rounded-2xl border border-slate-700 text-xs">
-                <span className="font-bold text-sky-400 block mb-1">Radiologist / Doctor Findings:</span>
+              <div className="mt-4 bg-slate-800/80 p-4 rounded-xl border border-slate-700 text-xs">
+                <span className="font-bold text-blue-400 block mb-1">Radiologist / Doctor Findings:</span>
                 <p className="text-slate-300 leading-relaxed">{lightboxXray.findings}</p>
               </div>
             )}
@@ -708,7 +732,7 @@ export default function DentistXRaysPage() {
       {/* --- ADD X-RAY RECORD MODAL --- */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 animate-fade-in backdrop-blur-sm">
-          <div className="bg-white rounded-3xl w-full max-w-2xl p-6 md:p-8 shadow-2xl relative border border-slate-100 max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-2xl w-full max-w-2xl p-6 md:p-8 shadow-2xl relative border border-slate-100 max-h-[90vh] overflow-y-auto">
             <button
               onClick={() => setIsAddModalOpen(false)}
               className="absolute top-5 right-5 text-slate-400 hover:text-slate-600 p-2 bg-slate-100 rounded-full"
@@ -774,7 +798,7 @@ export default function DentistXRaysPage() {
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-1.5">X-Ray Image File</label>
                 <div className="flex gap-2 mb-3">
-                  <label className="flex-1 border-2 border-dashed border-slate-300 hover:border-blue-500 p-4 rounded-2xl flex flex-col items-center justify-center cursor-pointer transition bg-slate-50 hover:bg-blue-50/20">
+                  <label className="flex-1 border-2 border-dashed border-slate-300 hover:border-blue-500 p-4 rounded-xl flex flex-col items-center justify-center cursor-pointer transition bg-slate-50 hover:bg-blue-50/20">
                     <Upload size={20} className="text-slate-400 mb-1" />
                     <span className="text-xs font-bold text-slate-700">Upload from Device</span>
                     <span className="text-[10px] text-slate-400">PNG, JPG, DICOM Export</span>
@@ -809,7 +833,7 @@ export default function DentistXRaysPage() {
 
                 {/* Image Preview Box */}
                 {formData.imageUrl && (
-                  <div className="h-36 bg-slate-950 rounded-2xl flex items-center justify-center p-2 border border-slate-200 relative overflow-hidden">
+                  <div className="h-36 bg-slate-950 rounded-xl flex items-center justify-center p-2 border border-slate-200 relative overflow-hidden">
                     <img src={formData.imageUrl} alt="Preview" className="max-h-full object-contain" />
                     <span className="absolute bottom-2 right-2 bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded">
                       Image Ready
@@ -862,7 +886,7 @@ export default function DentistXRaysPage() {
       {/* --- EDIT X-RAY FINDINGS MODAL --- */}
       {isEditModalOpen && selectedXray && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 animate-fade-in backdrop-blur-sm">
-          <div className="bg-white rounded-3xl w-full max-w-lg p-6 md:p-8 shadow-2xl relative border border-slate-100 max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-2xl w-full max-w-lg p-6 md:p-8 shadow-2xl relative border border-slate-100 max-h-[90vh] overflow-y-auto">
             <button
               onClick={() => setIsEditModalOpen(false)}
               className="absolute top-5 right-5 text-slate-400 hover:text-slate-600 p-2 bg-slate-100 rounded-full"

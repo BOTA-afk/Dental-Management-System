@@ -241,6 +241,7 @@ export default function IssuePrescriptionModal({
               onSelectPatient={(id) => setPatientId(id)}
               label="Select Patient"
               required
+              allowChange={false}
             />
           </div>
 
