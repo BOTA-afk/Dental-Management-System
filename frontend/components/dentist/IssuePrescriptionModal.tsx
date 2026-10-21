@@ -106,12 +106,14 @@ export default function IssuePrescriptionModal({
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (preselectedPatient) {
-      setPatientId(preselectedPatient._id);
-    } else if (patients.length > 0 && !patientId) {
-      setPatientId(patients[0]._id);
+    if (isOpen) {
+      if (preselectedPatient) {
+        setPatientId(preselectedPatient._id);
+      } else {
+        setPatientId("");
+      }
     }
-  }, [preselectedPatient, patients]);
+  }, [isOpen, preselectedPatient]);
 
   if (!isOpen) return null;
 
@@ -241,7 +243,7 @@ export default function IssuePrescriptionModal({
               onSelectPatient={(id) => setPatientId(id)}
               label="Select Patient"
               required
-              allowChange={false}
+              allowChange={true}
             />
           </div>
 

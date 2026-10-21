@@ -505,7 +505,7 @@ export const getBills = async (req, res) => {
 };
 
 export const createBill = async (req, res) => {
-  const { patientId, amount, treatment, status, paymentMethod, items, dentistId, amountPaid, dueAmount } = req.body;
+  const { patientId, amount, treatment, status, paymentMethod, items, dentistId, amountPaid, dueAmount, date, sendEmail } = req.body;
   try {
     const patient = await Patient.findById(patientId);
     if (!patient) {
@@ -538,6 +538,8 @@ export const createBill = async (req, res) => {
       finalStatus = 'Partially Paid';
     }
 
+    const billDate = date ? new Date(date) : new Date();
+
     const bill = await Billing.create({
       patient: patientId,
       amount: calculatedAmount,
@@ -548,24 +550,26 @@ export const createBill = async (req, res) => {
       paymentMethod: paymentMethod || 'N/A',
       dentist: dentistId || null,
       items: items || [],
-      date: new Date()
+      date: billDate
     });
 
-    // Notification
-    await Notification.create({
-      patient: patientId,
-      title: "Invoice Generated",
-      message: `An invoice of Rs. ${Number(calculatedAmount).toLocaleString()} has been generated for your ${calculatedTreatment} treatment.`,
-      type: 'billing'
-    });
+    if (sendEmail !== false) {
+      // Notification
+      await Notification.create({
+        patient: patientId,
+        title: "Invoice Generated",
+        message: `An invoice of Rs. ${Number(calculatedAmount).toLocaleString()} has been generated for your ${calculatedTreatment} treatment.`,
+        type: 'billing'
+      });
 
-    // Send Receipt Email if Paid
-    if (bill.status === 'Paid') {
-      try {
-        const pdfBuffer = await generateBillingReceiptPdf(patient.name, bill);
-        await sendBillingReceiptEmail(patient.email, patient.name, bill, pdfBuffer);
-      } catch (emailErr) {
-        console.error("Failed to generate/send invoice receipt email on creation:", emailErr);
+      // Send Receipt Email if Paid
+      if (bill.status === 'Paid') {
+        try {
+          const pdfBuffer = await generateBillingReceiptPdf(patient.name, bill);
+          await sendBillingReceiptEmail(patient.email, patient.name, bill, pdfBuffer);
+        } catch (emailErr) {
+          console.error("Failed to generate/send invoice receipt email on creation:", emailErr);
+        }
       }
     }
 
@@ -1676,5 +1680,157 @@ export const sendPrescriptionEmailToPatient = async (req, res) => {
   } catch (error) {
     console.error("Error in sendPrescriptionEmailToPatient:", error);
     res.status(500).json({ message: "Failed to send prescription email", error: error.message });
+  }
+};
+
+// POST /api/admin/billing/seed-cashflow-dummy-data
+export const seedCashflowDummyData = async (req, res) => {
+  try {
+    const daysCount = Number(req.body.daysCount) || 30;
+    const patients = await Patient.find();
+    const dentists = await User.find({ role: 'dentist' });
+    const inventoryItems = await Inventory.find();
+
+    if (patients.length === 0) {
+      return res.status(400).json({ message: "No patients found in system to associate dummy bills with." });
+    }
+
+    const treatments = [
+      { name: "Full Mouth Scaling, Polishing & Air-Flow Prophylaxis", baseCost: 7500 },
+      { name: "Direct Composite Bonding & Aesthetics", baseCost: 12000 },
+      { name: "Composite Resin Restoration (Posterior Class II)", baseCost: 9500 },
+      { name: "Root Canal Therapy (Pre-Molar)", baseCost: 28000 },
+      { name: "Complex Molar Endodontic Treatment (3 Canals)", baseCost: 38000 },
+      { name: "High-Strength Zirconia Dental Crown", baseCost: 48000 },
+      { name: "Porcelain Veneer Aesthetic Placement", baseCost: 35000 },
+      { name: "Surgical Impacted Wisdom Tooth Extraction", baseCost: 25000 },
+      { name: "Simple Tooth Extraction & Socket Preservation", baseCost: 6500 },
+      { name: "In-Office Laser Teeth Whitening", baseCost: 32000 },
+      { name: "Orthodontic Adjustment & Archwire Replacement", baseCost: 14000 },
+      { name: "Pediatric Dental Examination & Pit Fissure Sealant", baseCost: 8000 },
+      { name: "Periodontal Deep Scaling & Root Planing (Per Quad)", baseCost: 16000 },
+      { name: "Emergency Pain Relief & Pulpotomy Dressing", baseCost: 8500 }
+    ];
+
+    const supplies = [
+      { name: "Dental Composite Resin Syringes (A2/A3)", category: "Supply", price: 250, minQty: 40, maxQty: 100 },
+      { name: "Dental Surgical Face Masks & Nitrile Gloves", category: "Medication", price: 50, minQty: 120, maxQty: 300 },
+      { name: "Autoclave Sterilization Heat-Seal Pouches", category: "Supply", price: 100, minQty: 50, maxQty: 150 },
+      { name: "Lignocaine 2% Local Anesthetic Dental Cartridges", category: "Medication", price: 180, minQty: 60, maxQty: 150 },
+      { name: "Diamond High-Speed Dental Burs (Set)", category: "Supply", price: 350, minQty: 25, maxQty: 60 },
+      { name: "Chromaflex Alginate Impression Powder (500g)", category: "Supply", price: 450, minQty: 20, maxQty: 50 },
+      { name: "Rotary NiTi Endodontic Files (Assorted)", category: "Supply", price: 850, minQty: 15, maxQty: 35 }
+    ];
+
+    const paymentMethods = ["Cash", "Card"];
+
+    const today = new Date();
+    today.setHours(12, 0, 0, 0);
+
+    const createdBills = [];
+    const createdOrders = [];
+
+    // Realistic multi-tier revenue distribution across the 30 days
+    for (let dayOffset = daysCount - 1; dayOffset >= 0; dayOffset--) {
+      const targetDate = new Date(today.getTime() - dayOffset * 24 * 60 * 60 * 1000);
+      const dayOfWeek = targetDate.getDay(); // 0: Sunday, 6: Saturday
+
+      // Realistic patient footfall based on day of week
+      let dailyBillCount;
+      if (dayOfWeek === 6) {
+        // Saturday: clinic peak day (5 to 8 patients)
+        dailyBillCount = 5 + Math.floor(Math.random() * 4);
+      } else if (dayOfWeek === 0) {
+        // Sunday: shorter clinic hours (1 to 3 patients)
+        dailyBillCount = 1 + Math.floor(Math.random() * 3);
+      } else {
+        // Weekdays: steady active clinic (3 to 6 patients)
+        dailyBillCount = 3 + Math.floor(Math.random() * 4);
+      }
+
+      for (let i = 0; i < dailyBillCount; i++) {
+        const patient = patients[Math.floor(Math.random() * patients.length)];
+        const dentist = dentists.length > 0 ? dentists[Math.floor(Math.random() * dentists.length)] : null;
+        const treatmentItem = treatments[Math.floor(Math.random() * treatments.length)];
+
+        // Variation of -8% to +12%
+        const variation = (Math.random() * 0.20) - 0.08;
+        const finalCost = Math.round((treatmentItem.baseCost * (1 + variation)) / 100) * 100;
+
+        // Bill time between 09:00 and 18:00
+        const billHour = 9 + Math.floor(Math.random() * 9);
+        const billMinute = Math.floor(Math.random() * 60);
+        const billDate = new Date(targetDate);
+        billDate.setHours(billHour, billMinute, 0, 0);
+
+        // 92% of bills are fully paid, 8% are partially paid
+        const isPaid = Math.random() > 0.08;
+        const amountPaid = isPaid ? finalCost : Math.round((finalCost * 0.5) / 100) * 100;
+        const dueAmount = finalCost - amountPaid;
+        const status = dueAmount === 0 ? "Paid" : "Partially Paid";
+        const method = paymentMethods[Math.floor(Math.random() * paymentMethods.length)];
+
+        const bill = await Billing.create({
+          patient: patient._id,
+          amount: finalCost,
+          amountPaid,
+          dueAmount,
+          treatment: treatmentItem.name,
+          status,
+          paymentMethod: method,
+          dentist: dentist ? dentist._id : null,
+          items: [{ name: treatmentItem.name, cost: finalCost }],
+          date: billDate
+        });
+        createdBills.push(bill);
+      }
+
+      // Generate realistic supplier procurement expense on select days (approx 2 to 3 times per week)
+      const isRestockDay = (dayOffset % 3 === 0) || (dayOffset % 7 === 2) || (Math.random() < 0.20);
+      if (isRestockDay && dayOfWeek !== 0) {
+        const supply = supplies[Math.floor(Math.random() * supplies.length)];
+        const matchedItem = inventoryItems.find(item =>
+          item.name && supply.name && item.name.toLowerCase().includes(supply.name.slice(0, 7).toLowerCase())
+        ) || (inventoryItems.length > 0 ? inventoryItems[0] : null);
+
+        const qty = supply.minQty + Math.floor(Math.random() * (supply.maxQty - supply.minQty));
+        const orderHour = 10 + Math.floor(Math.random() * 5);
+        const orderTime = new Date(targetDate);
+        orderTime.setHours(orderHour, 0, 0, 0);
+        const expectedDelivery = new Date(orderTime.getTime() + 5 * 24 * 60 * 60 * 1000);
+
+        const order = await SupplierOrder.create({
+          inventoryItem: matchedItem ? matchedItem._id : null,
+          itemName: supply.name,
+          category: supply.category,
+          quantity: qty,
+          unit: "units",
+          supplier: null,
+          supplierName: "MediDent Healthcare Dental Supplies",
+          supplierEmail: "orders@medident-supply.com",
+          requestedBy: req.user?.id || null,
+          orderDate: orderTime,
+          expectedDeliveryDate: expectedDelivery,
+          deliveryDeadlineDays: 5,
+          status: "Confirmed",
+          notes: "Routine inventory supply restock batch"
+        });
+        createdOrders.push(order);
+      }
+    }
+
+    const totalIncome = createdBills.reduce((sum, b) => sum + (b.amountPaid || 0), 0);
+
+    res.status(201).json({
+      success: true,
+      message: `Successfully created realistic 30-day dummy financial data for Incoming vs Expenses chart.`,
+      daysCovered: daysCount,
+      billsCreated: createdBills.length,
+      ordersCreated: createdOrders.length,
+      totalIncomeAdded: totalIncome
+    });
+  } catch (error) {
+    console.error("Error seeding cashflow dummy data:", error);
+    res.status(500).json({ message: "Server error seeding cashflow dummy data", error: error.message });
   }
 };

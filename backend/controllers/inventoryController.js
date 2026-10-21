@@ -771,8 +771,8 @@ export const createSupplierOrder = async (req, res) => {
       });
     }
 
-    // Set delivery deadline strictly to 5 days from today
-    const orderDate = new Date();
+    // Set delivery deadline strictly to 5 days from order date
+    const orderDate = req.body.orderDate ? new Date(req.body.orderDate) : new Date();
     const expectedDeliveryDate = new Date(orderDate.getTime() + (5 * 24 * 60 * 60 * 1000));
 
     const newOrder = await SupplierOrder.create({
@@ -788,7 +788,7 @@ export const createSupplierOrder = async (req, res) => {
       orderDate,
       expectedDeliveryDate,
       deliveryDeadlineDays: 5,
-      status: 'Requested',
+      status: req.body.status || 'Requested',
       notes: notes || ''
     });
 
@@ -796,19 +796,21 @@ export const createSupplierOrder = async (req, res) => {
       .populate('inventoryItem', 'name category unit')
       .populate('requestedBy', 'fullName email');
 
-    // Send formal procurement email to supplier requesting delivery within 5 days
-    const staffName = req.user?.fullName || 'Clinic Assistant';
-    await sendSupplierOrderEmail({
-      supplierEmail: supplierEmail.trim().toLowerCase(),
-      supplierName: supplierName.trim(),
-      itemName: itemName.trim(),
-      quantity: Number(quantity),
-      unit: unit || 'units',
-      orderDate,
-      expectedDeliveryDate,
-      notes: notes || '',
-      requestedByName: staffName
-    });
+    if (req.body.sendEmail !== false) {
+      // Send formal procurement email to supplier requesting delivery within 5 days
+      const staffName = req.user?.fullName || 'Clinic Assistant';
+      await sendSupplierOrderEmail({
+        supplierEmail: supplierEmail.trim().toLowerCase(),
+        supplierName: supplierName.trim(),
+        itemName: itemName.trim(),
+        quantity: Number(quantity),
+        unit: unit || 'units',
+        orderDate,
+        expectedDeliveryDate,
+        notes: notes || '',
+        requestedByName: staffName
+      });
+    }
 
     // Create a notification for staff and broadcast via socket
     const orderNotif = await Notification.create({

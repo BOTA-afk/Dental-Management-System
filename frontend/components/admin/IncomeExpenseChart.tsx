@@ -14,7 +14,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Check,
-  Clock
+  Clock,
+  Sparkles
 } from "lucide-react";
 
 export interface DailyCashflowPoint {
@@ -138,6 +139,7 @@ export default function IncomeExpenseChart({
 
   const [cashflow, setCashflow] = useState<CashflowResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [seeding, setSeeding] = useState<boolean>(false);
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
 
   // Close popovers when clicking outside

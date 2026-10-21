@@ -37,7 +37,8 @@ import {
   createPrescription,
   updatePrescription,
   deletePrescription,
-  sendPrescriptionEmailToPatient
+  sendPrescriptionEmailToPatient,
+  seedCashflowDummyData
 } from "../controllers/adminController.js";
 import { verifyToken, isAdmin, isStaff, isAdminOrAssistant } from '../middleware/authMiddleware.js';
 import { getAuthUrl } from '../utils/googleCalendarService.js';
@@ -76,6 +77,7 @@ router.put('/billing/:id', verifyToken, isStaff, updateBill);
 router.post('/billing/:id/checkout-session', verifyToken, isStaff, createAdminCheckoutSession);
 router.get('/billing/summary', verifyToken, isStaff, getBillingSummary);
 router.get('/billing/cashflow', verifyToken, isStaff, getMonthlyCashflow);
+router.post('/billing/seed-cashflow-dummy-data', verifyToken, isStaff, seedCashflowDummyData);
 
 // Clinical Treatment Plans routes
 router.get('/treatment-plans', verifyToken, isStaff, getTreatmentPlans);

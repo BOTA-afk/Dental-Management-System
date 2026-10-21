@@ -766,15 +766,7 @@ export default function HomePage() {
                 <span className="text-xs text-slate-500 block">Experience</span>
                 <span className="text-sm font-bold text-slate-900">12+ Years Clinical</span>
               </div>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                type="button"
-                onClick={() => setBookingModalOpen(true)}
-                className="px-5 py-2.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs transition shadow-sm"
-              >
-                Consult Dr. Carter
-              </motion.button>
+
             </div>
           </motion.div>
 

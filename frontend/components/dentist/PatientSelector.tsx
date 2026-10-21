@@ -147,7 +147,7 @@ export default function PatientSelector({
           <div className="max-h-52 overflow-y-auto space-y-1.5 pr-1 divide-y divide-slate-100">
             {filteredPatients.length === 0 ? (
               <div className="py-6 text-center text-slate-400 text-xs font-medium">
-                No patients found matching "{searchQuery}".
+                No patients found matching &quot;{searchQuery}&quot;.
               </div>
             ) : (
               filteredPatients.map((patient) => {
