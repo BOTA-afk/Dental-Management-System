@@ -730,7 +730,7 @@ export default function HomePage() {
             <div>
               <div className="relative aspect-[4/3] rounded-2xl overflow-hidden mb-6 bg-slate-100 border border-slate-100 group">
                 <Image
-                  src="https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=800&q=80"
+                  src="/Erandi Chathurangani.jpg"
                   alt="Dr. Erandi Chathurangani"
                   fill
                   className="object-cover object-top transition-transform duration-500 group-hover:scale-105"
