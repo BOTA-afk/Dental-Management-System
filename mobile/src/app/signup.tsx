@@ -82,7 +82,16 @@ const [gender, setGender] = useState(''); // Added (Male, Female, Other)
           <View style={styles.inputContainer}>
             <Ionicons name="calendar-outline" size={20} color="#9CA3AF" style={styles.icon} />
             <TouchableOpacity onPress={() => setShowDatePicker(true)}>
-              <Text style={styles.dateText}>{dob.toLocaleDateString()}</Text>
+              <Text style={styles.dateText}>
+                {dob.toLocaleDateString()}
+                {(() => {
+                  const today = new Date();
+                  let age = today.getFullYear() - dob.getFullYear();
+                  const m = today.getMonth() - dob.getMonth();
+                  if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+                  return age > 0 ? `  (Age: ${age})` : '';
+                })()}
+              </Text>
             </TouchableOpacity>
           </View>
           {showDatePicker && (

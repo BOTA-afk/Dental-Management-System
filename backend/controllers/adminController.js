@@ -13,6 +13,7 @@ import Billing from '../models/Billing.js';
 import TreatmentPlan from '../models/TreatmentPlan.js';
 import XRayRecord from '../models/XRayRecord.js';
 import Prescription from '../models/Prescription.js';
+import TreatmentRecord from '../models/TreatmentRecord.js';
 import Inventory from '../models/Inventory.js';
 import InventoryLog from '../models/InventoryLog.js';
 import SupplierOrder from '../models/SupplierOrder.js';
@@ -1832,5 +1833,110 @@ export const seedCashflowDummyData = async (req, res) => {
   } catch (error) {
     console.error("Error seeding cashflow dummy data:", error);
     res.status(500).json({ message: "Server error seeding cashflow dummy data", error: error.message });
+  }
+};
+
+// --- PATIENT PROFILE & TREATMENT RECORDS ---
+
+const RECORD_EDIT_WINDOW_MS = 24 * 60 * 60 * 1000;
+
+// GET /api/admin/patients/:id
+export const getPatientById = async (req, res) => {
+  try {
+    const patient = await Patient.findById(req.params.id)
+      .select("name email phoneNumber dob gender nic homeAddress allergies createdAt");
+    if (!patient) {
+      return res.status(404).json({ message: "Patient not found" });
+    }
+    res.json(patient);
+  } catch (error) {
+    res.status(500).json({ message: "Server error fetching patient", error: error.message });
+  }
+};
+
+// GET /api/admin/patients/:id/treatment-records
+export const getTreatmentRecords = async (req, res) => {
+  try {
+    const records = await TreatmentRecord.find({ patient: req.params.id })
+      .populate('dentist', 'fullName')
+      .sort({ date: -1 });
+    res.json(records);
+  } catch (error) {
+    res.status(500).json({ message: "Server error fetching treatment records", error: error.message });
+  }
+};
+
+// POST /api/admin/patients/:id/treatment-records
+export const createTreatmentRecord = async (req, res) => {
+  const { treatmentName, drugs, treatmentsDone, totalCost, paidAmount } = req.body;
+  try {
+    if (!treatmentName || !treatmentName.trim()) {
+      return res.status(400).json({ message: "Treatment name is required." });
+    }
+    const total = Number(totalCost) || 0;
+    const paid = Number(paidAmount) || 0;
+    if (total < 0 || paid < 0) {
+      return res.status(400).json({ message: "Amounts cannot be negative." });
+    }
+    if (paid > total) {
+      return res.status(400).json({ message: "Paid amount cannot exceed total cost." });
+    }
+
+    const patient = await Patient.findById(req.params.id);
+    if (!patient) {
+      return res.status(404).json({ message: "Patient not found" });
+    }
+
+    const record = await TreatmentRecord.create({
+      patient: patient._id,
+      dentist: req.user?.id,
+      treatmentName: treatmentName.trim(),
+      drugs: drugs ? drugs.trim() : '',
+      treatmentsDone: treatmentsDone ? treatmentsDone.trim() : '',
+      totalCost: total,
+      paidAmount: paid
+    });
+
+    const populated = await TreatmentRecord.findById(record._id).populate('dentist', 'fullName');
+    res.status(201).json(populated);
+  } catch (error) {
+    res.status(500).json({ message: "Server error creating treatment record", error: error.message });
+  }
+};
+
+// PUT /api/admin/treatment-records/:recordId  (editable only within 24h of creation)
+export const updateTreatmentRecord = async (req, res) => {
+  const { treatmentName, drugs, treatmentsDone, totalCost, paidAmount } = req.body;
+  try {
+    const record = await TreatmentRecord.findById(req.params.recordId);
+    if (!record) {
+      return res.status(404).json({ message: "Treatment record not found" });
+    }
+    if (Date.now() - new Date(record.createdAt).getTime() > RECORD_EDIT_WINDOW_MS) {
+      return res.status(403).json({ message: "Records can only be edited within 24 hours of creation." });
+    }
+
+    if (treatmentName !== undefined) {
+      if (!treatmentName.trim()) {
+        return res.status(400).json({ message: "Treatment name is required." });
+      }
+      record.treatmentName = treatmentName.trim();
+    }
+    if (drugs !== undefined) record.drugs = drugs.trim();
+    if (treatmentsDone !== undefined) record.treatmentsDone = treatmentsDone.trim();
+    if (totalCost !== undefined) record.totalCost = Number(totalCost) || 0;
+    if (paidAmount !== undefined) record.paidAmount = Number(paidAmount) || 0;
+    if (record.totalCost < 0 || record.paidAmount < 0) {
+      return res.status(400).json({ message: "Amounts cannot be negative." });
+    }
+    if (record.paidAmount > record.totalCost) {
+      return res.status(400).json({ message: "Paid amount cannot exceed total cost." });
+    }
+
+    await record.save();
+    const populated = await TreatmentRecord.findById(record._id).populate('dentist', 'fullName');
+    res.json(populated);
+  } catch (error) {
+    res.status(500).json({ message: "Server error updating treatment record", error: error.message });
   }
 };

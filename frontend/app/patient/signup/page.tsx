@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, Eye, EyeOff, ShieldCheck, Sparkles, CheckCircle } from "lucide-react";
+import { calculateAge } from "@/lib/utils";
 
 export default function PatientSignupPage() {
   const router = useRouter();
@@ -216,8 +217,13 @@ export default function PatientSignupPage() {
 
               {/* Date of Birth */}
               <div>
-                <label className="block text-[11px] font-semibold text-slate-700 mb-1">
-                  Date of Birth <span className="text-rose-500">*</span>
+                <label className="flex items-center justify-between text-[11px] font-semibold text-slate-700 mb-1">
+                  <span>Date of Birth <span className="text-rose-500">*</span></span>
+                  {calculateAge(formData.dob) !== null && (
+                    <span className="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full font-bold">
+                      Age: {calculateAge(formData.dob)} years
+                    </span>
+                  )}
                 </label>
                 <input
                   type="date"

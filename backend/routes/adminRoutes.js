@@ -38,7 +38,11 @@ import {
   updatePrescription,
   deletePrescription,
   sendPrescriptionEmailToPatient,
-  seedCashflowDummyData
+  seedCashflowDummyData,
+  getPatientById,
+  getTreatmentRecords,
+  createTreatmentRecord,
+  updateTreatmentRecord
 } from "../controllers/adminController.js";
 import { verifyToken, isAdmin, isStaff, isAdminOrAssistant } from '../middleware/authMiddleware.js';
 import { getAuthUrl } from '../utils/googleCalendarService.js';
@@ -66,6 +70,10 @@ router.post('/patients/:patientId/check-in', verifyToken, isStaff, checkInPatien
 router.get('/patients', verifyToken, isStaff, getPatients);
 router.post('/patients', verifyToken, isStaff, addPatient);
 router.put('/patients/:id', verifyToken, isStaff, updatePatient);
+router.get('/patients/:id', verifyToken, isStaff, getPatientById);
+router.get('/patients/:id/treatment-records', verifyToken, isStaff, getTreatmentRecords);
+router.post('/patients/:id/treatment-records', verifyToken, isStaff, createTreatmentRecord);
+router.put('/treatment-records/:recordId', verifyToken, isStaff, updateTreatmentRecord);
 router.get('/appointments', verifyToken, isStaff, getAppointments);
 router.get('/appointments/booked-slots', verifyToken, isStaff, getBookedSlots);
 router.post('/appointments', verifyToken, isStaff, createAppointment);

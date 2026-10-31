@@ -7,8 +7,6 @@ import {
   LayoutDashboard, 
   Calendar, 
   Users, 
-  Stethoscope, 
-  FileHeart, 
   CreditCard, 
   MessageSquare, 
   ClipboardList,
@@ -22,8 +20,6 @@ export default function DentistSidebar() {
     { title: "Dashboard", href: "/dentist/dashboard", icon: LayoutDashboard },
     { title: "Appointments", href: "/dentist/appointments", icon: Calendar },
     { title: "Patients", href: "/dentist/patients", icon: Users },
-    { title: "Treatments", href: "/dentist/treatments", icon: Stethoscope },
-    { title: "X-rays & Docs", href: "/dentist/x-rays", icon: FileHeart },
     { title: "Billing", href: "/dentist/billing", icon: CreditCard },
     { title: "Messages", href: "/dentist/messages", icon: MessageSquare },
     { title: "Supply Request", href: "/dentist/supply", icon: ClipboardList }
@@ -53,7 +49,7 @@ export default function DentistSidebar() {
       {/* Menu */}
       <nav className="flex-1 space-y-2 overflow-y-auto">
         {dentistMenuItems.map((item) => {
-          const active = pathname === item.href;
+          const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
           return (
             <a
               key={item.href}

@@ -13,7 +13,8 @@ import {
   Bell,
   X,
   Clock,
-  ClipboardList
+  ClipboardList,
+  UserRound
 } from "lucide-react";
 
 interface UserProfile {
@@ -480,6 +481,14 @@ export default function DentistAppointmentsPage() {
                             >
                               Details
                             </button>
+                            {(appt.patient?._id) && (
+                              <button
+                                onClick={() => router.push(`/dentist/patients/${appt.patient?._id}`)}
+                                className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs bg-blue-50 hover:bg-blue-100 border border-blue-100 rounded-lg text-blue-700 transition font-semibold cursor-pointer"
+                              >
+                                <UserRound size={13} /> Go to Patient Profile
+                              </button>
+                            )}
                             {appt.status !== 'Completed' && appt.status !== 'Cancelled' && (
                               <>
                                 <button

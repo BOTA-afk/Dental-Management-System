@@ -351,6 +351,12 @@ export default function DentistPatientsPage() {
                           >
                             Details
                           </button>
+                          <button
+                            onClick={() => router.push(`/dentist/patients/${p._id}`)}
+                            className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-2.5 py-1.5 rounded-xl text-xs transition cursor-pointer whitespace-nowrap"
+                          >
+                            Profile
+                          </button>
                         </div>
                       </td>
                     </tr>
