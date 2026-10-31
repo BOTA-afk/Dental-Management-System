@@ -187,13 +187,13 @@ export default function HomePage() {
                 ))}
               </nav>
 
-              {/* Right Action: Patient Login & Doctor/Staff */}
+              {/* Right Action: Join DentPlus & Doctor/Staff */}
               <div className="flex items-center gap-2">
                 <Link
-                  href="/patient/login"
+                  href="/patient/signup"
                   className="px-4 py-1.5 rounded-full bg-white text-slate-950 font-semibold text-xs hover:bg-sky-50 transition shadow-sm"
                 >
-                  Patient Login
+                  Join DentPlus
                 </Link>
                 <Link
                   href="/admin/login"
@@ -291,13 +291,13 @@ export default function HomePage() {
               ))}
             </nav>
 
-            {/* Right Action: Patient Login & Doctor/Staff */}
+            {/* Right Action: Join DentPlus & Doctor/Staff */}
             <div className="hidden sm:flex items-center gap-2.5">
               <Link
-                href="/patient/login"
+                href="/patient/signup"
                 className="px-5 py-2.5 rounded-full bg-white text-slate-950 font-semibold text-xs lg:text-sm hover:bg-sky-50 transition shadow-lg shadow-black/20"
               >
-                Patient Login
+                Join DentPlus
               </Link>
               <Link
                 href="/admin/login"
@@ -310,10 +310,10 @@ export default function HomePage() {
             {/* Mobile menu toggle */}
             <div className="flex md:hidden items-center gap-2">
               <Link
-                href="/patient/login"
+                href="/patient/signup"
                 className="px-3 py-1.5 rounded-full bg-white text-slate-900 text-xs font-semibold"
               >
-                Login
+                Join
               </Link>
               <button
                 type="button"
@@ -348,10 +348,10 @@ export default function HomePage() {
                   ))}
                   <div className="pt-2 border-t border-white/10 flex flex-col gap-2">
                     <Link
-                      href="/patient/login"
+                      href="/patient/signup"
                       className="w-full text-center py-2.5 rounded-xl bg-white text-slate-950 text-sm font-semibold"
                     >
-                      Patient Login
+                      Join DentPlus
                     </Link>
                     <Link
                       href="/admin/login"
@@ -441,7 +441,7 @@ export default function HomePage() {
                   <div className="mt-1.5 flex items-center justify-between">
                     <span className="text-[11px] font-semibold text-sky-400 flex items-center gap-1">
                       <Star size={11} className="fill-amber-400 text-amber-400" />
-                      4.9 [Rating]
+                      3.8 Rating
                     </span>
                     <ArrowRight size={12} className="text-slate-400" />
                   </div>
@@ -602,9 +602,9 @@ export default function HomePage() {
                 </p>
                 <div className="flex items-center gap-1 text-amber-500 text-xs">
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} size={12} className="fill-amber-400 text-amber-400" />
+                    <Star key={i} size={12} className={i < 4 ? "fill-amber-400 text-amber-400" : "text-amber-400"} />
                   ))}
-                  <span className="text-slate-500 text-[11px] ml-1">5.0 Star Feedback</span>
+                  <span className="text-slate-500 text-[11px] ml-1">3.8 Star Feedback</span>
                 </div>
               </div>
             </div>
@@ -646,7 +646,7 @@ export default function HomePage() {
                 transition={{ duration: 0.5, delay: 0.3 }}
               >
                 <div className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight flex items-center">
-                  4.9<span className="text-amber-500 text-2xl">*</span>
+                  3.8<span className="text-amber-500 text-2xl">*</span>
                 </div>
                 <div className="text-xs sm:text-sm text-slate-500 font-medium mt-1">
                   Customer Rating
@@ -746,7 +746,7 @@ export default function HomePage() {
                 </h3>
                 <div className="flex items-center gap-1 text-xs font-bold text-slate-800 bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200">
                   <Star size={13} className="fill-amber-400 text-amber-400" />
-                  <span>4.9 (45+ reviews)</span>
+                  <span>3.8 (45+ reviews)</span>
                 </div>
               </div>
 
@@ -903,14 +903,6 @@ export default function HomePage() {
                   Deep ultrasonic scaling removes calcified plaque and stains that
                   daily toothbrushes simply cannot reach.
                 </p>
-                <button
-                  type="button"
-                  onClick={() => setBookingModalOpen(true)}
-                  className="inline-flex items-center gap-2 text-xs font-bold text-blue-600 group-hover:text-blue-800 transition"
-                >
-                  <span>Learn More</span>
-                  <ArrowRight size={14} className="group-hover:translate-x-1.5 transition-transform" />
-                </button>
               </div>
             </motion.div>
 
@@ -941,14 +933,6 @@ export default function HomePage() {
                 <p className="text-sm text-slate-600 leading-relaxed mb-6">
                   Custom transparent aligners engineered to discreetly align teeth with minimal discomfort and rapid outcomes.
                 </p>
-                <button
-                  type="button"
-                  onClick={() => setBookingModalOpen(true)}
-                  className="inline-flex items-center gap-2 text-xs font-bold text-blue-600 group-hover:text-blue-800 transition"
-                >
-                  <span>Learn More</span>
-                  <ArrowRight size={14} className="group-hover:translate-x-1.5 transition-transform" />
-                </button>
               </div>
             </motion.div>
 
@@ -979,14 +963,6 @@ export default function HomePage() {
                 <p className="text-sm text-slate-600 leading-relaxed mb-6">
                   Titanium-reinforced posts and porcelain zirconia crowns that match your natural smile permanently.
                 </p>
-                <button
-                  type="button"
-                  onClick={() => setBookingModalOpen(true)}
-                  className="inline-flex items-center gap-2 text-xs font-bold text-blue-600 group-hover:text-blue-800 transition"
-                >
-                  <span>Learn More</span>
-                  <ArrowRight size={14} className="group-hover:translate-x-1.5 transition-transform" />
-                </button>
               </div>
             </motion.div>
           </div>
